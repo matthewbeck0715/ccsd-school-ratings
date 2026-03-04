@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Prevent Leaflet map from overlapping Tailwind UI elements */
+.leaflet-container {
+  z-index: 0;
+}
