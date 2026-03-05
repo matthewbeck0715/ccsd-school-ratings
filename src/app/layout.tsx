@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'CCSD School Ratings',
-  description: 'Clark County School District school performance ratings and data visualization',
+  title: 'NV School Ratings',
+  description: 'Nevada school performance ratings and data visualization',
 }
 
 export const viewport: Viewport = {

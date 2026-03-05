@@ -6,7 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const schoolsPath = join(__dirname, '..', 'public', 'data', 'schools.json')
 
 const DELAY_MS = 1100 // Nominatim rate limit: 1 req/sec
-const USER_AGENT = 'ccsd-school-ratings/1.0 (github.com/ccsd-school-ratings)'
+const USER_AGENT = 'nv-school-ratings/1.0 (github.com/nv-school-ratings)'
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms))

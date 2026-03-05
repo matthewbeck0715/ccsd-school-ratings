@@ -18,7 +18,7 @@ export async function geocodeAddress(
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?${params}`,
     {
-      headers: { 'User-Agent': 'ccsd-school-ratings/1.0' },
+      headers: { 'User-Agent': 'nv-school-ratings/1.0' },
     }
   )
 

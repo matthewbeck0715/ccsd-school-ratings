@@ -23,7 +23,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-4 shrink-0">
         <h1 className="text-base font-semibold text-gray-900 leading-tight">
-          CCSD School Ratings
+          NV School Ratings
         </h1>
         {/* View toggle */}
         <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm shrink-0">

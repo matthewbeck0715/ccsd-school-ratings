@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`ccsd-school-ratings` is a mobile-friendly data visualization website for Clark County School District (CCSD) school performance data. Built with Next.js + TypeScript, hosted on GitHub Pages as a static export.
+`nv-school-ratings` is a mobile-friendly data visualization website for Nevada school performance data. Built with Next.js + TypeScript, hosted on GitHub Pages as a static export.
 
 ## Commands
 
@@ -17,7 +17,7 @@ npx serve out    # Preview production build locally
 
 For a production-accurate local preview:
 ```bash
-NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/ccsd-school-ratings npm run build
+NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/nv-school-ratings npm run build
 ```
 
 ## Architecture
@@ -27,7 +27,7 @@ NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/ccsd-school-ratings npm run build
 **Key files**:
 - `next.config.ts` — `output: 'export'`, `basePath`/`assetPrefix` for GitHub Pages, `trailingSlash: true`
 - `src/types/school.ts` — `School` interface and `FilterState` type
-- `public/data/schools.json` — school data (replace placeholder with real CCSD data)
+- `public/data/schools.json` — school data
 - `src/hooks/useSchools.ts` — client-side data fetch + filter logic; prefixes URL with `NEXT_PUBLIC_BASE_PATH`
 - `src/utils/markerColors.ts` — star rating → color mapping; `createMarkerIcon()` using `L.divIcon`
 - `.github/workflows/deploy.yml` — CI/CD to GitHub Pages
