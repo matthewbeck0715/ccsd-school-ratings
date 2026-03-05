@@ -12,6 +12,24 @@ export function getMarkerColor(starRating: StarRating): string {
   return STAR_COLORS[starRating]
 }
 
+export function createUserLocationIcon() {
+  const L = require('leaflet')
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #2563eb;
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px #2563eb, 0 2px 6px rgba(0,0,0,0.4);
+    "></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -12],
+  })
+}
+
 export function createMarkerIcon(starRating: StarRating) {
   // Use require to avoid top-level import (SSR-safe when called client-side only)
   const L = require('leaflet')

@@ -2,10 +2,10 @@
 
 import { Marker, Popup } from 'react-leaflet'
 import { createMarkerIcon } from '@/utils/markerColors'
-import type { School } from '@/types/school'
+import type { SchoolWithDistance } from '@/types/school'
 
 interface SchoolMarkerProps {
-  school: School
+  school: SchoolWithDistance
 }
 
 export default function SchoolMarker({ school }: SchoolMarkerProps) {
@@ -22,11 +22,17 @@ export default function SchoolMarker({ school }: SchoolMarkerProps) {
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
             <span className="text-gray-500">Stars</span>
             <span className="font-medium">{'★'.repeat(school.starRating)}</span>
-            <span className="text-gray-500">Index</span>
+            <span className="text-gray-500">Score</span>
             <span className="font-medium">{school.indexScore}</span>
-            <span className="text-gray-500">ELA%</span>
+            {school.distanceMiles != null && (
+              <>
+                <span className="text-gray-500">Distance</span>
+                <span className="font-medium">{school.distanceMiles.toFixed(1)} mi</span>
+              </>
+            )}
+            <span className="text-gray-500">ELA Prof.</span>
             <span className="font-medium">{school.elaProficiency ?? '—'}</span>
-            <span className="text-gray-500">Math%</span>
+            <span className="text-gray-500">Math Prof.</span>
             <span className="font-medium">{school.mathProficiency ?? '—'}</span>
           </div>
         </div>

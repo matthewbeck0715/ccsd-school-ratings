@@ -1,36 +1,57 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSchools } from '@/hooks/useSchools'
-import StarRating from '@/components/StarRating'
-import type { FilterState, School } from '@/types/school'
+import StarRatingComponent from '@/components/StarRating'
+import type { FilterState, SchoolWithDistance } from '@/types/school'
 
-type SortKey = keyof Pick<School, 'name' | 'level' | 'starRating' | 'indexScore'>
+type SortKey = 'name' | 'level' | 'type' | 'starRating' | 'indexScore' | 'elaProficiency' | 'mathProficiency' | 'elaGrowth' | 'mathGrowth' | 'distanceMiles'
 
 interface TableViewProps {
   filters: FilterState
 }
 
-const PAGE_SIZE = 25
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 0] as const // 0 = all
 
 export default function TableView({ filters }: TableViewProps) {
   const { schools, loading, error } = useSchools(filters)
-  const [sortKey, setSortKey] = useState<SortKey>('name')
-  const [sortAsc, setSortAsc] = useState(true)
+  const [sortKey, setSortKey] = useState<SortKey>('indexScore')
+  const [sortAsc, setSortAsc] = useState(false)
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState<number>(25)
+
+  const hasProximity = filters.proximity !== null
+  const colCount = hasProximity ? 10 : 9
+
+  // Auto-sort by distance when proximity activates
+  useEffect(() => {
+    if (hasProximity) {
+      setSortKey('distanceMiles')
+      setSortAsc(true)
+      setPage(0)
+    } else if (sortKey === 'distanceMiles') {
+      setSortKey('name')
+      setSortAsc(true)
+      setPage(0)
+    }
+  }, [hasProximity]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sorted = useMemo(() => {
     return [...schools].sort((a, b) => {
-      const av = a[sortKey]
-      const bv = b[sortKey]
+      const av = a[sortKey as keyof SchoolWithDistance]
+      const bv = b[sortKey as keyof SchoolWithDistance]
+      if (av == null && bv == null) return 0
+      if (av == null) return 1
+      if (bv == null) return -1
       if (av < bv) return sortAsc ? -1 : 1
       if (av > bv) return sortAsc ? 1 : -1
       return 0
     })
   }, [schools, sortKey, sortAsc])
 
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
-  const pageSlice = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const effectivePageSize = pageSize === 0 ? sorted.length : pageSize
+  const totalPages = effectivePageSize > 0 ? Math.ceil(sorted.length / effectivePageSize) : 1
+  const pageSlice = pageSize === 0 ? sorted : sorted.slice(page * pageSize, (page + 1) * pageSize)
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -42,7 +63,7 @@ export default function TableView({ filters }: TableViewProps) {
     setPage(0)
   }
 
-  const colClass = 'px-3 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap'
+  const colClass = 'px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none whitespace-nowrap'
   const indicator = (key: SortKey) =>
     sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : ''
 
@@ -62,40 +83,64 @@ export default function TableView({ filters }: TableViewProps) {
               <th className={colClass} onClick={() => handleSort('name')}>
                 School{indicator('name')}
               </th>
-              <th className={colClass + ' hidden sm:table-cell'} onClick={() => handleSort('level')}>
+              {hasProximity && (
+                <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('distanceMiles')}>
+                  Distance{indicator('distanceMiles')}
+                </th>
+              )}
+              <th className={colClass + ' w-0 hidden sm:table-cell'} onClick={() => handleSort('level')}>
                 Level{indicator('level')}
               </th>
-              <th className={colClass} onClick={() => handleSort('starRating')}>
+              <th className={colClass + ' w-0 hidden sm:table-cell'} onClick={() => handleSort('type')}>
+                Type{indicator('type')}
+              </th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('starRating')}>
                 Stars{indicator('starRating')}
               </th>
-              <th className={colClass} onClick={() => handleSort('indexScore')}>
-                Index{indicator('indexScore')}
+              <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('indexScore')}>
+                Score{indicator('indexScore')}
               </th>
-              <th className={colClass + ' hidden md:table-cell'}>ELA%</th>
-              <th className={colClass + ' hidden md:table-cell'}>Math%</th>
+              <th className={colClass + ' w-0 text-right hidden md:table-cell'} onClick={() => handleSort('elaProficiency')}>ELA Proficiency{indicator('elaProficiency')}</th>
+              <th className={colClass + ' w-0 text-right hidden md:table-cell'} onClick={() => handleSort('mathProficiency')}>Math Proficiency{indicator('mathProficiency')}</th>
+              <th className={colClass + ' w-0 text-right hidden md:table-cell'} onClick={() => handleSort('elaGrowth')}>ELA Growth{indicator('elaGrowth')}</th>
+              <th className={colClass + ' w-0 text-right hidden md:table-cell'} onClick={() => handleSort('mathGrowth')}>Math Growth{indicator('mathGrowth')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
             {pageSlice.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-8 text-center text-gray-400">
+                <td colSpan={colCount} className="px-4 py-8 text-center text-gray-400">
                   No schools match your filters.
                 </td>
               </tr>
             ) : (
               pageSlice.map((school) => (
                 <tr key={school.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 font-medium text-gray-900">{school.name}</td>
-                  <td className="px-3 py-2 text-gray-500 hidden sm:table-cell">{school.level}{school.type === 'Charter' ? ' · Charter' : ''}</td>
-                  <td className="px-3 py-2">
-                    <StarRating rating={school.starRating} />
+                  <td className="px-4 py-2 font-medium text-gray-900">{school.name}</td>
+                  {hasProximity && (
+                    <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">
+                      {school.distanceMiles != null
+                        ? `${school.distanceMiles.toFixed(1)} mi`
+                        : '—'}
+                    </td>
+                  )}
+                  <td className="px-4 py-2 w-0 text-gray-500 hidden sm:table-cell">{school.level}</td>
+                  <td className="px-4 py-2 w-0 text-gray-500 hidden sm:table-cell">{school.type}</td>
+                  <td className="px-4 py-2 w-0">
+                    <StarRatingComponent rating={school.starRating} />
                   </td>
-                  <td className="px-3 py-2 text-gray-700">{school.indexScore}</td>
-                  <td className="px-3 py-2 text-gray-700 hidden md:table-cell">
-                    {school.elaProficiency ?? '—'}
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">{school.indexScore.toFixed(1)}</td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right hidden md:table-cell">
+                    {school.elaProficiency != null ? `${Number(school.elaProficiency).toFixed(1)}%` : '—'}
                   </td>
-                  <td className="px-3 py-2 text-gray-700 hidden md:table-cell">
-                    {school.mathProficiency ?? '—'}
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right hidden md:table-cell">
+                    {school.mathProficiency != null ? `${Number(school.mathProficiency).toFixed(1)}%` : '—'}
+                  </td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right hidden md:table-cell">
+                    {school.elaGrowth != null ? `${Number(school.elaGrowth).toFixed(1)}%` : '—'}
+                  </td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right hidden md:table-cell">
+                    {school.mathGrowth != null ? `${Number(school.mathGrowth).toFixed(1)}%` : '—'}
                   </td>
                 </tr>
               ))
@@ -104,29 +149,45 @@ export default function TableView({ filters }: TableViewProps) {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white text-sm">
+      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white text-sm">
           <span className="text-gray-500">
-            Page {page + 1} of {totalPages} ({sorted.length} schools)
+            {sorted.length} schools{totalPages > 1 && ` · Page ${page + 1} of ${totalPages}`}
           </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page === totalPages - 1}
-              className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50"
-            >
-              Next
-            </button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="text-gray-500 text-xs">Show:</span>
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <button
+                  key={size}
+                  onClick={() => { setPageSize(size); setPage(0) }}
+                  className={`px-2 py-1 rounded text-xs border transition-colors ${
+                    pageSize === size
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                  }`}
+                >
+                  {size === 0 ? 'All' : size}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0 || totalPages <= 1}
+                className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1 || totalPages <= 1}
+                className="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
-      )}
     </div>
   )
 }

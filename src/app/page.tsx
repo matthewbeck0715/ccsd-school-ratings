@@ -8,8 +8,10 @@ import TableView from '@/components/table/TableView'
 
 const DEFAULT_FILTERS: FilterState = {
   search: '',
+  schoolTypes: [],
   schoolLevels: [],
   starRatings: [],
+  proximity: null,
 }
 
 export default function Home() {

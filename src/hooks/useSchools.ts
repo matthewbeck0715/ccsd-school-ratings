@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import type { School, FilterState } from '@/types/school'
+import type { School, FilterState, SchoolWithDistance } from '@/types/school'
+import { haversineDistanceMiles } from '@/utils/haversine'
 
 export function useSchools(filters: FilterState) {
   const [schools, setSchools] = useState<School[]>([])
@@ -26,27 +27,55 @@ export function useSchools(filters: FilterState) {
   }, [])
 
   const filtered = useMemo(() => {
-    return schools.filter((school) => {
+    const result: SchoolWithDistance[] = []
+
+    for (const school of schools) {
       if (
         filters.search &&
         !school.name.toLowerCase().includes(filters.search.toLowerCase())
       ) {
-        return false
+        continue
+      }
+      if (
+        filters.schoolTypes.length > 0 &&
+        !filters.schoolTypes.includes(school.type)
+      ) {
+        continue
       }
       if (
         filters.schoolLevels.length > 0 &&
         !filters.schoolLevels.includes(school.level)
       ) {
-        return false
+        continue
       }
       if (
         filters.starRatings.length > 0 &&
         !filters.starRatings.includes(school.starRating)
       ) {
-        return false
+        continue
       }
-      return true
-    })
+
+      let distanceMiles: number | null = null
+
+      if (filters.proximity) {
+        if (school.lat === null || school.lng === null) continue
+        distanceMiles = haversineDistanceMiles(
+          filters.proximity.lat,
+          filters.proximity.lng,
+          school.lat,
+          school.lng
+        )
+        if (distanceMiles > filters.proximity.radiusMiles) continue
+      }
+
+      result.push({ ...school, distanceMiles })
+    }
+
+    if (filters.proximity) {
+      result.sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0))
+    }
+
+    return result
   }, [schools, filters])
 
   return { schools: filtered, loading, error }

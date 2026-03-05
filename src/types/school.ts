@@ -19,8 +19,21 @@ export interface School {
   lng: number | null
 }
 
+export interface ProximityFilter {
+  lat: number
+  lng: number
+  radiusMiles: number
+  label: string
+}
+
 export interface FilterState {
   search: string
+  schoolTypes: SchoolType[]
   schoolLevels: SchoolLevel[]
   starRatings: StarRating[]
+  proximity: ProximityFilter | null
+}
+
+export interface SchoolWithDistance extends School {
+  distanceMiles: number | null
 }

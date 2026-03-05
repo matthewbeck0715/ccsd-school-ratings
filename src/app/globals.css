@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 /* Prevent Leaflet map from overlapping Tailwind UI elements */
 .leaflet-container {
   z-index: 0;
