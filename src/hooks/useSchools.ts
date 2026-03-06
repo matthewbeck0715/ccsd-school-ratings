@@ -11,7 +11,7 @@ export function useSchools(filters: FilterState) {
 
   useEffect(() => {
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
-    fetch(`${basePath}/data/schools.json`)
+    fetch(`${basePath}/data/nv-schools.json`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
         return res.json()
@@ -52,6 +52,9 @@ export function useSchools(filters: FilterState) {
         filters.starRatings.length > 0 &&
         !filters.starRatings.includes(school.starRating)
       ) {
+        continue
+      }
+      if (filters.county && school.county !== filters.county) {
         continue
       }
 

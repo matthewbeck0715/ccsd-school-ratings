@@ -7,7 +7,8 @@ export interface School {
   name: string
   type: SchoolType
   level: SchoolLevel
-  starRating: StarRating
+  county: string | null
+  starRating: StarRating | null
   indexScore: number
   elaProficiency: number | string | null
   mathProficiency: number | string | null
@@ -17,6 +18,9 @@ export interface School {
   titleI: boolean
   lat: number | null
   lng: number | null
+  address: string | null
+  city: string | null
+  zip: string | null
 }
 
 export interface ProximityFilter {
@@ -30,7 +34,8 @@ export interface FilterState {
   search: string
   schoolTypes: SchoolType[]
   schoolLevels: SchoolLevel[]
-  starRatings: StarRating[]
+  starRatings: (StarRating | null)[]
+  county: string | null
   proximity: ProximityFilter | null
 }
 

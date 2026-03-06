@@ -8,8 +8,8 @@ const STAR_COLORS: Record<StarRating, string> = {
   5: '#3b82f6', // blue
 }
 
-export function getMarkerColor(starRating: StarRating): string {
-  return STAR_COLORS[starRating]
+export function getMarkerColor(starRating: StarRating | null): string {
+  return starRating !== null ? STAR_COLORS[starRating] : '#9ca3af'
 }
 
 export function createUserLocationIcon() {
@@ -30,7 +30,7 @@ export function createUserLocationIcon() {
   })
 }
 
-export function createMarkerIcon(starRating: StarRating) {
+export function createMarkerIcon(starRating: StarRating | null) {
   // Use require to avoid top-level import (SSR-safe when called client-side only)
   const L = require('leaflet')
   const color = getMarkerColor(starRating)
@@ -50,7 +50,7 @@ export function createMarkerIcon(starRating: StarRating) {
       font-weight: bold;
       font-size: 12px;
       font-family: sans-serif;
-    ">${starRating}</div>`,
+    ">${starRating ?? 'NR'}</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
     popupAnchor: [0, -16],

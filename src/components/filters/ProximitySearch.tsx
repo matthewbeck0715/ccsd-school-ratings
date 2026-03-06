@@ -68,14 +68,14 @@ export default function ProximitySearch({ proximity, onChange }: ProximitySearch
       <button
         onClick={handleSearch}
         disabled={searching || !address.trim()}
-        className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 whitespace-nowrap"
+        className="px-2.5 py-1.5 text-xs font-bold border rounded transition-colors bg-blue-600 text-white border-blue-600 hover:bg-blue-700 disabled:opacity-40 whitespace-nowrap"
       >
         {searching ? 'Searching…' : 'Search'}
       </button>
       <button
         onClick={handleGeolocation}
         disabled={searching}
-        className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-40 whitespace-nowrap"
+        className="px-2.5 py-1.5 text-xs font-bold border rounded transition-colors bg-white text-gray-600 border-gray-300 hover:border-gray-400 disabled:opacity-40 whitespace-nowrap"
       >
         Use my location
       </button>
