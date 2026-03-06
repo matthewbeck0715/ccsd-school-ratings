@@ -27,7 +27,7 @@ NODE_ENV=production NEXT_PUBLIC_BASE_PATH=/nv-school-ratings npm run build
 **Key files**:
 - `next.config.ts` — `output: 'export'`, `basePath`/`assetPrefix` for GitHub Pages, `trailingSlash: true`
 - `src/types/school.ts` — `School` interface and `FilterState` type
-- `public/data/schools.json` — school data
+- `public/data/nv-schools.json` — school data
 - `src/hooks/useSchools.ts` — client-side data fetch + filter logic; prefixes URL with `NEXT_PUBLIC_BASE_PATH`
 - `src/utils/markerColors.ts` — star rating → color mapping; `createMarkerIcon()` using `L.divIcon`
 - `.github/workflows/deploy.yml` — CI/CD to GitHub Pages

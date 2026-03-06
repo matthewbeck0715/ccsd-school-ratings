@@ -11,6 +11,7 @@ const DEFAULT_FILTERS: FilterState = {
   schoolTypes: [],
   schoolLevels: [],
   starRatings: [],
+  county: null,
   proximity: null,
 }
 

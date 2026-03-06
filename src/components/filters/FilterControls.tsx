@@ -6,7 +6,13 @@ import ProximitySearch from './ProximitySearch'
 
 const ALL_TYPES: SchoolType[] = ['Regular', 'Charter']
 const ALL_LEVELS: SchoolLevel[] = ['Elementary', 'Middle', 'High']
-const ALL_STARS: StarRating[] = [1, 2, 3, 4, 5]
+const ALL_STARS: (StarRating | null)[] = [null, 1, 2, 3, 4, 5]
+const ALL_COUNTIES = [
+  'Carson City', 'Churchill', 'Clark', 'Douglas', 'Elko',
+  'Esmeralda', 'Eureka', 'Humboldt', 'Lander', 'Lincoln',
+  'Lyon', 'Mineral', 'Nye', 'Pershing',
+  'Storey', 'Washoe', 'White Pine',
+]
 
 interface FilterControlsProps {
   filters: FilterState
@@ -19,6 +25,7 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
     filters.schoolTypes.length > 0 ||
     filters.schoolLevels.length > 0 ||
     filters.starRatings.length > 0 ||
+    filters.county !== null ||
     filters.proximity !== null
 
   function toggleType(type: SchoolType) {
@@ -35,7 +42,7 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
     onChange({ ...filters, schoolLevels: next })
   }
 
-  function toggleStar(star: StarRating) {
+  function toggleStar(star: StarRating | null) {
     const next = filters.starRatings.includes(star)
       ? filters.starRatings.filter((s) => s !== star)
       : [...filters.starRatings, star]
@@ -43,7 +50,7 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
   }
 
   function clearAll() {
-    onChange({ search: '', schoolTypes: [], schoolLevels: [], starRatings: [], proximity: null })
+    onChange({ search: '', schoolTypes: [], schoolLevels: [], starRatings: [], county: null, proximity: null })
   }
 
   return (
@@ -76,6 +83,21 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
       </div>
 
       <div className="flex flex-wrap gap-4">
+        {/* County filter */}
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-500 font-medium mr-1">County:</span>
+          <select
+            value={filters.county ?? ''}
+            onChange={(e) => onChange({ ...filters, county: e.target.value || null })}
+            className="border border-gray-300 rounded px-2 py-0.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700"
+          >
+            <option value="">All</option>
+            {ALL_COUNTIES.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
+
         {/* School level pills */}
         <div className="flex flex-wrap gap-1 items-center">
           <span className="text-xs text-gray-500 font-medium mr-1">Level:</span>
@@ -85,10 +107,10 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
               <button
                 key={level}
                 onClick={() => toggleLevel(level)}
-                className={`px-2.5 py-0.5 rounded-full text-xs border transition-colors ${
+                className={`px-2.5 py-0.5 rounded text-xs font-bold border transition-colors ${
                   active
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                 }`}
               >
                 {level}
@@ -106,10 +128,10 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
               <button
                 key={type}
                 onClick={() => toggleType(type)}
-                className={`px-2.5 py-0.5 rounded-full text-xs border transition-colors ${
+                className={`px-2.5 py-0.5 rounded text-xs font-bold border transition-colors ${
                   active
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                 }`}
               >
                 {type}
@@ -126,15 +148,15 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
             const color = getMarkerColor(star)
             return (
               <button
-                key={star}
+                key={star ?? 'nr'}
                 onClick={() => toggleStar(star)}
-                title={`${star} star${star !== 1 ? 's' : ''}`}
+                title={star !== null ? `${star} star${star !== 1 ? 's' : ''}` : 'Not Rated'}
                 className={`w-8 h-7 rounded text-xs font-bold border transition-colors ${
                   active ? 'text-white border-transparent' : 'bg-white border-gray-300 hover:border-gray-400'
                 }`}
                 style={active ? { backgroundColor: color, borderColor: color } : { color }}
               >
-                {star}★
+                {star !== null ? `${star}★` : 'NR'}
               </button>
             )
           })}
@@ -143,28 +165,25 @@ export default function FilterControls({ filters, onChange }: FilterControlsProp
         {/* Proximity status */}
         {filters.proximity && (
           <div className="flex flex-wrap gap-1 items-center">
-            <span className="text-xs text-gray-700 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
+            <button
+              onClick={() => onChange({ ...filters, proximity: null })}
+              className="text-xs font-bold border rounded px-2.5 py-0.5 bg-blue-600 text-white border-blue-600 hover:bg-blue-700 transition-colors"
+            >
               {filters.proximity.label}
-            </span>
+            </button>
             {([3, 5, 10] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => onChange({ ...filters, proximity: { ...filters.proximity!, radiusMiles: r } })}
-                className={`px-2 py-0.5 rounded-full text-xs border transition-colors ${
+                className={`px-2.5 py-0.5 rounded text-xs font-bold border transition-colors ${
                   filters.proximity!.radiusMiles === r
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                 }`}
               >
                 {r} mi
               </button>
             ))}
-            <button
-              onClick={() => onChange({ ...filters, proximity: null })}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              Clear
-            </button>
           </div>
         )}
       </div>

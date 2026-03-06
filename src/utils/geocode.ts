@@ -8,11 +8,11 @@ export async function geocodeAddress(
   address: string
 ): Promise<{ lat: number; lng: number; label: string }> {
   const params = new URLSearchParams({
-    q: address,
+    q: `${address}, Nevada`,
     format: 'json',
     limit: '1',
-    viewbox: '-115.9,36.8,-114.5,35.5',
-    bounded: '1',
+    countrycodes: 'us',
+    viewbox: '-120.0,42.0,-114.0,35.0',
   })
 
   const res = await fetch(
@@ -25,11 +25,11 @@ export async function geocodeAddress(
   if (!res.ok) throw new Error('Geocoding request failed')
 
   const data: NominatimResult[] = await res.json()
-  if (data.length === 0) throw new Error('Address not found in Clark County area')
+  if (data.length === 0) throw new Error('Address not found')
 
   return {
     lat: parseFloat(data[0].lat),
     lng: parseFloat(data[0].lon),
-    label: data[0].display_name.split(',').slice(0, 2).join(','),
+    label: address,
   }
 }
