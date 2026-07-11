@@ -11,7 +11,7 @@ interface ProximitySearchProps {
 }
 
 export default function ProximitySearch({ proximity, onChange, onError }: ProximitySearchProps) {
-  const [address, setAddress] = useState('')
+  const [address, setAddress] = useState(proximity?.label ?? '')
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

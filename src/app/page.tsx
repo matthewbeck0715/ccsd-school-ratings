@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { FilterState, School } from '@/types/school'
-import { DEFAULT_FILTERS } from '@/types/school'
 import SchoolSearch from '@/components/filters/SchoolSearch'
 import CountyFilter from '@/components/filters/CountyFilter'
 import LevelFilter from '@/components/filters/LevelFilter'
@@ -16,13 +16,39 @@ import { useSchools } from '@/hooks/useSchools'
 import MapView from '@/components/map/MapView'
 import TableView from '@/components/table/TableView'
 import FilterResults from '@/components/panel/FilterResults'
+import { parseFilters, serializeFilters } from '@/utils/filterParams'
 
+function HomeContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-export default function Home() {
   const [view, setView] = useState<'map' | 'table'>('map')
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState<FilterState>(() => parseFilters(searchParams))
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [addressError, setAddressError] = useState<string | null>(null)
+  const isPopState = useRef(false)
+
+  useEffect(() => {
+    function handlePopState() {
+      isPopState.current = true
+      setFilters(parseFilters(new URLSearchParams(window.location.search)))
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  useEffect(() => {
+    if (isPopState.current) {
+      isPopState.current = false
+      return
+    }
+    const params = serializeFilters(filters)
+    const qs = params.toString()
+    const timer = setTimeout(() => {
+      router.push(qs ? `?${qs}` : '?', { scroll: false })
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [filters, router])
 
   const handleSelectSchool = useCallback((school: School) => {
     setSelectedSchool(school)
@@ -47,7 +73,7 @@ export default function Home() {
     (filters.proximity !== null ? 1 : 0)
 
   function clearFilters() {
-    setFilters(DEFAULT_FILTERS)
+    setFilters(parseFilters(new URLSearchParams()))
   }
 
   return (
@@ -205,5 +231,13 @@ export default function Home() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   )
 }
