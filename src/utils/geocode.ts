@@ -52,7 +52,7 @@ export async function geocodeAddress(
 export async function reverseGeocode(
   lat: number,
   lng: number
-): Promise<{ county: string | null }> {
+): Promise<{ county: string | null; label: string | null }> {
   const params = new URLSearchParams({
     lat: String(lat),
     lon: String(lng),
@@ -67,8 +67,11 @@ export async function reverseGeocode(
     }
   )
 
-  if (!res.ok) return { county: null }
+  if (!res.ok) return { county: null, label: null }
 
   const data: NominatimResult = await res.json()
-  return { county: parseCounty(data.address) }
+  const label =
+    [data.address?.house_number, data.address?.road].filter(Boolean).join(' ') ||
+    data.display_name.split(',')[0].trim()
+  return { county: parseCounty(data.address), label }
 }

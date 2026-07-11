@@ -1,30 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ProximityFilter } from '@/types/school'
 import { geocodeAddress, reverseGeocode } from '@/utils/geocode'
 
 interface ProximitySearchProps {
   proximity: ProximityFilter | null
   onChange: (proximity: ProximityFilter | null, county: string | null) => void
+  onError?: (error: string | null) => void
 }
 
-export default function ProximitySearch({ proximity, onChange }: ProximitySearchProps) {
+export default function ProximitySearch({ proximity, onChange, onError }: ProximitySearchProps) {
   const [address, setAddress] = useState('')
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (proximity === null) {
+      setAddress('')
+      setError(null)
+      onError?.(null)
+    }
+  }, [proximity])
 
   async function handleSearch() {
     const trimmed = address.trim()
     if (!trimmed) return
     setSearching(true)
-    setError(null)
+    setError(null); onError?.(null)
     try {
       const result = await geocodeAddress(trimmed)
       onChange({ ...result, radiusMiles: proximity?.radiusMiles ?? 0 }, result.county)
-      setAddress('')
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Geocoding failed')
+      const msg = e instanceof Error ? e.message : 'Geocoding failed'
+      setError(msg); onError?.(msg)
     } finally {
       setSearching(false)
     }
@@ -32,25 +41,28 @@ export default function ProximitySearch({ proximity, onChange }: ProximitySearch
 
   function handleGeolocation() {
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser')
+      const msg = 'Geolocation is not supported by your browser'
+      setError(msg); onError?.(msg)
       return
     }
     setSearching(true)
-    setError(null)
+    setError(null); onError?.(null)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords
-        const { county } = await reverseGeocode(lat, lng)
+        const { county, label } = await reverseGeocode(lat, lng)
         onChange({
           lat,
           lng,
           radiusMiles: proximity?.radiusMiles ?? 0,
-          label: 'My location',
+          label: label ?? 'My location',
         }, county)
+        if (label) setAddress(label)
         setSearching(false)
       },
       (err) => {
-        setError(err.message || 'Could not get your location')
+        const msg = err.message || 'Could not get your location'
+        setError(msg); onError?.(msg)
         setSearching(false)
       }
     )
@@ -62,10 +74,10 @@ export default function ProximitySearch({ proximity, onChange }: ProximitySearch
         type="text"
         placeholder="Enter address…"
         value={address}
-        onChange={(e) => setAddress(e.target.value)}
+        onChange={(e) => { setAddress(e.target.value); if (error) setError(null); onError?.(null) }}
         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         disabled={searching}
-        className="border border-gray-300 rounded px-3 py-1.5 text-sm flex-1 min-w-[160px] max-w-md focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
+        className={`border rounded px-3 py-1.5 text-sm flex-1 min-w-[160px] xl:min-w-64 max-w-md focus:outline-none focus:ring-2 disabled:opacity-50 ${error ? 'border-red-500 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-400'}`}
       />
       <button
         onClick={handleSearch}
@@ -81,10 +93,6 @@ export default function ProximitySearch({ proximity, onChange }: ProximitySearch
       >
         Use my location
       </button>
-
-      {error && (
-        <p className="text-xs text-red-600 w-full">{error}</p>
-      )}
     </>
   )
 }
