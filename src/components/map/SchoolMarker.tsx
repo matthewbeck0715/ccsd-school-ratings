@@ -5,6 +5,8 @@ import { Marker, Popup } from 'react-leaflet'
 import type L from 'leaflet'
 import { createMarkerIcon, getMarkerColor } from '@/utils/markerColors'
 import type { SchoolWithDistance } from '@/types/school'
+import { useCountyAverages } from '@/hooks/useCountyAverages'
+import { formatDelta, deltaColor, countyLevelKey } from '@/utils/countyAverages'
 
 interface SchoolMarkerProps {
   school: SchoolWithDistance
@@ -15,6 +17,13 @@ interface SchoolMarkerProps {
 export default React.memo(function SchoolMarker({ school, isSelected, onSelect }: SchoolMarkerProps) {
   const icon = createMarkerIcon(school.starRating)
   const markerRef = useRef<L.Marker>(null)
+  const countyAvgMap = useCountyAverages()
+  const countyAvg = school.county && countyAvgMap ? countyAvgMap.get(countyLevelKey(school.county, school.level)) ?? null : null
+  const scoreDelta = countyAvg ? formatDelta(school.indexScore, countyAvg.avgIndexScore) : null
+  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficiency === 'number' ? school.elaProficiency : null, countyAvg.avgElaProficiency) : null
+  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficiency === 'number' ? school.mathProficiency : null, countyAvg.avgMathProficiency) : null
+  const elaGrowthDelta = countyAvg ? formatDelta(typeof school.elaGrowth === 'number' ? school.elaGrowth : null, countyAvg.avgElaGrowth) : null
+  const mathGrowthDelta = countyAvg ? formatDelta(typeof school.mathGrowth === 'number' ? school.mathGrowth : null, countyAvg.avgMathGrowth) : null
 
   useEffect(() => {
     if (isSelected && markerRef.current) {
@@ -53,23 +62,23 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect }
             </div>
             <div>
               <div className="text-gray-400">Score</div>
-              <div className="font-medium">{school.indexScore}</div>
+              <div className="font-medium">{school.indexScore}{scoreDelta && <span className={`ml-1 font-normal ${deltaColor(scoreDelta)}`}>({scoreDelta})</span>}</div>
             </div>
             <div>
               <div className="text-gray-400">ELA Proficiency</div>
-              <div className="font-medium">{school.elaProficiency != null ? `${school.elaProficiency}%` : '—'}</div>
+              <div className="font-medium">{school.elaProficiency != null ? `${school.elaProficiency}%` : '—'}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
             </div>
             <div>
               <div className="text-gray-400">Math Proficiency</div>
-              <div className="font-medium">{school.mathProficiency != null ? `${school.mathProficiency}%` : '—'}</div>
+              <div className="font-medium">{school.mathProficiency != null ? `${school.mathProficiency}%` : '—'}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
             </div>
             <div>
               <div className="text-gray-400">ELA Growth</div>
-              <div className="font-medium">{school.elaGrowth != null ? `${school.elaGrowth}%` : '—'}</div>
+              <div className="font-medium">{school.elaGrowth != null ? `${school.elaGrowth}%` : '—'}{elaGrowthDelta && <span className={`ml-1 font-normal ${deltaColor(elaGrowthDelta)}`}>({elaGrowthDelta}%)</span>}</div>
             </div>
             <div>
               <div className="text-gray-400">Math Growth</div>
-              <div className="font-medium">{school.mathGrowth != null ? `${school.mathGrowth}%` : '—'}</div>
+              <div className="font-medium">{school.mathGrowth != null ? `${school.mathGrowth}%` : '—'}{mathGrowthDelta && <span className={`ml-1 font-normal ${deltaColor(mathGrowthDelta)}`}>({mathGrowthDelta}%)</span>}</div>
             </div>
           </div>
         </div>

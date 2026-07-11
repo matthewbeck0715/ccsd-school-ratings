@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useCallback } from 'react'
 import { useMapEvents } from 'react-leaflet'
-import { COUNTY_VIEWS } from '@/utils/countyViews'
 import SchoolMarker from './SchoolMarker'
 import CountyPolygons from './CountyPolygons'
 import type { School, SchoolWithDistance } from '@/types/school'

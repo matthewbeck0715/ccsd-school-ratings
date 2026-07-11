@@ -8,6 +8,10 @@ import { useSchoolZones } from '@/hooks/useSchoolZones'
 import { findSchoolZonesForPoint, type ZoneLookupResult } from '@/utils/findSchoolZones'
 import { haversineDistanceMiles } from '@/utils/haversine'
 import SchoolCard from './SchoolCard'
+import { useCountyAverages } from '@/hooks/useCountyAverages'
+import { countyLevelKey } from '@/utils/countyAverages'
+import { getMarkerColor } from '@/utils/markerColors'
+import type { SchoolLevel } from '@/types/school'
 
 type SortKey = 'name' | 'starRating' | 'indexScore' | 'distanceMiles'
 
@@ -73,6 +77,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
   const isZone = proximity.radiusMiles === 0
 
   const { schools: allSchools } = useSchools(DEFAULT_FILTERS)
+  const countyAvgMap = useCountyAverages()
   const { geojson, loading: zonesLoading } = useSchoolZones(true)
   const [zoneResult, setZoneResult] = useState<ZoneLookupResult | null>(null)
   const onZoneResultRef = useRef(onZoneResult)
@@ -118,6 +123,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
               key={s.id}
               school={s}
               distanceMiles={s.lat != null && s.lng != null ? haversineDistanceMiles(proximity.lat, proximity.lng, s.lat, s.lng) : null}
+              countyAvg={s.county && countyAvgMap ? countyAvgMap.get(countyLevelKey(s.county, s.level)) ?? null : null}
               onSelect={onSelectSchool}
             />
           ))}
@@ -138,7 +144,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
       </div>
       <div className="flex flex-col gap-3">
         {sortedNearby.map((school) => (
-          <SchoolCard key={school.id} school={school} distanceMiles={school.distanceMiles} onSelect={onSelectSchool} />
+          <SchoolCard key={school.id} school={school} distanceMiles={school.distanceMiles} countyAvg={school.county && countyAvgMap ? countyAvgMap.get(countyLevelKey(school.county, school.level)) ?? null : null} onSelect={onSelectSchool} />
         ))}
       </div>
     </div>
@@ -147,6 +153,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
 
 function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps, 'filters' | 'onSelectSchool'>) {
   const { schools, loading } = useSchools(filters)
+  const countyAvgMap = useCountyAverages()
 
   const [sortKey, setSortKey] = useState<SortKey>('indexScore')
   const [sortAsc, setSortAsc] = useState(false)
@@ -156,6 +163,12 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
     [schools, sortKey, sortAsc]
   )
 
+  const LEVELS: SchoolLevel[] = ['Elementary', 'Middle', 'High']
+  const activeLevels = filters.schoolLevels.length > 0 ? filters.schoolLevels : LEVELS
+  const countyLevelAvgs = filters.county && countyAvgMap
+    ? activeLevels.map(l => countyAvgMap.get(countyLevelKey(filters.county!, l))).filter(Boolean)
+    : []
+
   if (loading) return (
     <div className="bg-white px-4 py-2 text-xs text-gray-500">
       Loading…
@@ -164,6 +177,23 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
 
   return (
     <div className="bg-white px-4 py-3 h-full">
+      {countyLevelAvgs.map(a => a && (
+        <div key={a.level} className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs">
+          <div className="font-semibold text-blue-800 mb-1">{a.county} {a.level} averages</div>
+          <div className="flex flex-wrap gap-x-3 text-blue-700">
+            <span>Score: <span className="font-medium">{a.avgIndexScore.toFixed(1)}</span></span>
+            {a.avgStarRating != null && (
+              <span>Stars: <span className="font-medium" style={{ color: getMarkerColor(Math.round(a.avgStarRating) as 1|2|3|4|5) }}>{'★'.repeat(Math.round(a.avgStarRating))}</span> <span className="text-blue-500">({a.avgStarRating.toFixed(1)})</span></span>
+            )}
+            {a.avgElaProficiency != null && (
+              <span>ELA: <span className="font-medium">{a.avgElaProficiency.toFixed(1)}%</span></span>
+            )}
+            {a.avgMathProficiency != null && (
+              <span>Math: <span className="font-medium">{a.avgMathProficiency.toFixed(1)}%</span></span>
+            )}
+          </div>
+        </div>
+      ))}
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs text-gray-500 font-medium">
 {schools.length === 0 ? 'No' : schools.length} {schools.length === 1 ? 'school' : 'schools'} matched
@@ -172,7 +202,12 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
       </div>
       <div className="flex flex-col gap-3">
         {sorted.map((school) => (
-          <SchoolCard key={school.id} school={school} onSelect={onSelectSchool} />
+          <SchoolCard
+            key={school.id}
+            school={school}
+            countyAvg={school.county && countyAvgMap ? countyAvgMap.get(countyLevelKey(school.county, school.level)) ?? null : null}
+            onSelect={onSelectSchool}
+          />
         ))}
       </div>
     </div>

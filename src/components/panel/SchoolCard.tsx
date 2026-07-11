@@ -2,10 +2,13 @@
 
 import type { School } from '@/types/school'
 import { getMarkerColor } from '@/utils/markerColors'
+import type { CountyLevelAverages } from '@/utils/countyAverages'
+import { formatDelta, deltaColor } from '@/utils/countyAverages'
 
 interface SchoolCardProps {
   school: School
   distanceMiles?: number | null
+  countyAvg?: CountyLevelAverages | null
   onSelect: (school: School) => void
 }
 
@@ -20,7 +23,13 @@ function getMapsUrl(query: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
 
-export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCardProps) {
+export default function SchoolCard({ school, distanceMiles, countyAvg, onSelect }: SchoolCardProps) {
+  const scoreDelta = countyAvg ? formatDelta(school.indexScore, countyAvg.avgIndexScore) : null
+  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficiency === 'number' ? school.elaProficiency : null, countyAvg.avgElaProficiency) : null
+  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficiency === 'number' ? school.mathProficiency : null, countyAvg.avgMathProficiency) : null
+  const elaGrowthDelta = countyAvg ? formatDelta(typeof school.elaGrowth === 'number' ? school.elaGrowth : null, countyAvg.avgElaGrowth) : null
+  const mathGrowthDelta = countyAvg ? formatDelta(typeof school.mathGrowth === 'number' ? school.mathGrowth : null, countyAvg.avgMathGrowth) : null
+
   return (
     <button
       onClick={() => onSelect(school)}
@@ -63,23 +72,23 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
           </div>
           <div>
             <div className="text-gray-400">Score</div>
-            <div className="font-medium">{school.indexScore}</div>
+            <div className="font-medium">{school.indexScore}{scoreDelta && <span className={`ml-1 font-normal ${deltaColor(scoreDelta)}`}>({scoreDelta})</span>}</div>
           </div>
           <div>
             <div className="text-gray-400">ELA Proficiency</div>
-            <div className="font-medium">{pct(school.elaProficiency)}</div>
+            <div className="font-medium">{pct(school.elaProficiency)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
           </div>
           <div>
             <div className="text-gray-400">Math Proficiency</div>
-            <div className="font-medium">{pct(school.mathProficiency)}</div>
+            <div className="font-medium">{pct(school.mathProficiency)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
           </div>
           <div>
             <div className="text-gray-400">ELA Growth</div>
-            <div className="font-medium">{pct(school.elaGrowth)}</div>
+            <div className="font-medium">{pct(school.elaGrowth)}{elaGrowthDelta && <span className={`ml-1 font-normal ${deltaColor(elaGrowthDelta)}`}>({elaGrowthDelta}%)</span>}</div>
           </div>
           <div>
             <div className="text-gray-400">Math Growth</div>
-            <div className="font-medium">{pct(school.mathGrowth)}</div>
+            <div className="font-medium">{pct(school.mathGrowth)}{mathGrowthDelta && <span className={`ml-1 font-normal ${deltaColor(mathGrowthDelta)}`}>({mathGrowthDelta}%)</span>}</div>
           </div>
         </div>
       </div>
