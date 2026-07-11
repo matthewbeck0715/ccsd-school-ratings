@@ -20,6 +20,7 @@ interface FilterDrawerProps {
 
 export default function FilterDrawer({ filters, onChange, onClear, filterCount, schoolCount }: FilterDrawerProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [addressError, setAddressError] = useState<string | null>(null)
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
@@ -30,13 +31,13 @@ export default function FilterDrawer({ filters, onChange, onClear, filterCount, 
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 sm:hidden"
+          className="fixed inset-0 z-40 bg-black/40 xl:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl sm:hidden flex flex-col overflow-hidden max-h-[85vh] transition-transform duration-300 ease-out"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl xl:hidden flex flex-col overflow-hidden max-h-[85vh] transition-transform duration-300 ease-out"
         style={{ transform: isOpen ? 'translateY(0)' : 'translateY(calc(100% - 4.5rem))', boxShadow: '0 -3px 10px rgba(0, 0, 0, 0.1)' }}
       >
         {/* Drag handle + header row */}
@@ -84,11 +85,14 @@ export default function FilterDrawer({ filters, onChange, onClear, filterCount, 
           </section>
 
           <section>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Address</p>
+            <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${addressError ? 'text-red-600' : 'text-gray-500'}`}>
+              {addressError ? 'Address Not Found' : 'Address'}
+            </p>
             <div className="flex flex-wrap items-center gap-2">
               <ProximitySearch
                 proximity={filters.proximity}
                 onChange={(proximity, county) => onChange({ ...filters, proximity: proximity ?? null, county: county ?? filters.county })}
+                onError={setAddressError}
               />
             </div>
           </section>

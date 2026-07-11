@@ -22,6 +22,7 @@ export default function Home() {
   const [view, setView] = useState<'map' | 'table'>('map')
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
+  const [addressError, setAddressError] = useState<string | null>(null)
 
   const handleSelectSchool = useCallback((school: School) => {
     setSelectedSchool(school)
@@ -70,10 +71,10 @@ export default function Home() {
       </header>
 
       {/* Filter bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sm:space-y-3 shrink-0">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 xl:space-y-3 shrink-0">
         {/* Row 1: search + proximity + clear + view toggle */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="hidden sm:flex sm:flex-col sm:gap-1">
+          <div className="hidden xl:flex xl:flex-col xl:gap-1">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">School</span>
             <SchoolSearch
               value={filters.search}
@@ -81,12 +82,15 @@ export default function Home() {
             />
           </div>
 
-          <div className="hidden sm:flex sm:flex-col sm:gap-1">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Address</span>
+          <div className="hidden xl:flex xl:flex-col xl:gap-1">
+            <span className={`text-xs font-semibold uppercase tracking-wide ${addressError ? 'text-red-600' : 'text-gray-500'}`}>
+              {addressError ? 'Address Not Found' : 'Address'}
+            </span>
             <div className="flex items-center gap-3">
               <ProximitySearch
                 proximity={filters.proximity}
                 onChange={(proximity, county) => setFilters((f) => ({ ...f, proximity, county }))}
+                onError={setAddressError}
               />
             </div>
           </div>
@@ -101,14 +105,14 @@ export default function Home() {
               onClick={() => { setView('table'); setSelectedSchool(null) }}
               className={`px-2.5 py-0.5 text-xs font-bold border-l border-gray-300 transition-colors ${view === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:border-gray-400'}`}
             >
-              <span className="sm:hidden">List</span>
-              <span className="hidden sm:inline">Table</span>
+              <span className="xl:hidden">List</span>
+              <span className="hidden xl:inline">Table</span>
             </button>
           </div>
         </div>
 
         {/* Row 2: filter pills — desktop only */}
-        <div className="hidden sm:flex flex-wrap gap-4">
+        <div className="hidden xl:flex flex-wrap gap-4">
           <div className="flex flex-col gap-1">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">County</span>
             <CountyFilter
@@ -171,9 +175,9 @@ export default function Home() {
 
       {/* Main content */}
       <main className="flex-1 overflow-hidden">
-        <div className={view === 'map' ? 'flex sm:flex-row h-full' : 'hidden'}>
+        <div className={view === 'map' ? 'flex xl:flex-row h-full' : 'hidden'}>
           {hasActive && (
-            <div className="hidden sm:block shrink-0 sm:w-1/3 sm:border-r border-gray-200 overflow-y-auto">
+            <div className="hidden xl:block shrink-0 xl:w-1/3 xl:border-r border-gray-200 overflow-y-auto">
               <FilterResults
                 filters={filters}
                 onSelectSchool={handleSelectSchool}
@@ -187,11 +191,11 @@ export default function Home() {
         </div>
         <div className={view === 'table' ? 'h-full' : 'hidden'}>
           {/* Desktop: full table */}
-          <div className="hidden sm:block h-full">
+          <div className="hidden xl:block h-full">
             <TableView filters={filters} onSelectSchool={handleSelectSchool} />
           </div>
           {/* Mobile: scrollable card list */}
-          <div className="sm:hidden h-full overflow-y-auto">
+          <div className="xl:hidden h-full overflow-y-auto">
             <FilterResults
               filters={filters}
               onSelectSchool={handleSelectSchool}

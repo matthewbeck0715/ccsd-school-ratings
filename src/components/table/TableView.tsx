@@ -158,7 +158,7 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
 
       <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-white text-sm">
           {/* Mobile: size selector on left. Hidden on sm+. */}
-          <div className="flex sm:hidden items-center gap-1">
+          <div className="flex xl:hidden items-center gap-1">
             <span className="text-gray-500 text-xs">Show:</span>
             {PAGE_SIZE_OPTIONS.map((size) => (
               <button
@@ -175,12 +175,12 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
             ))}
           </div>
           {/* Desktop: count label on left. Hidden on mobile. */}
-          <span className="hidden sm:inline text-gray-500">
+          <span className="hidden xl:inline text-gray-500">
             {sorted.length === 0 ? 'No' : sorted.length} {sorted.length === 1 ? 'school' : 'schools'} matched{totalPages > 1 && ` · Page ${page + 1} of ${totalPages}`}
           </span>
           {/* Right: size selector (desktop only) + Prev/Next */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1">
+            <div className="hidden xl:flex items-center gap-1">
               <span className="text-gray-500 text-xs">Show:</span>
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <button

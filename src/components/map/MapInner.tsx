@@ -95,6 +95,7 @@ export default function MapInner({ filters, selectedSchool, isVisible, onSelectS
     <MapContainer
       center={proximity ? [proximity.lat, proximity.lng] : NEVADA_CENTER}
       zoom={proximity ? 12 : 6}
+      minZoom={proximity ? 12 : 6}
       className="w-full h-full"
       style={{ zIndex: 0 }}
     >

@@ -13,6 +13,13 @@ function pct(val: number | string | null | undefined): string {
   return val != null ? `${val}%` : '—'
 }
 
+function getMapsUrl(query: string): string {
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    return `maps://?q=${encodeURIComponent(query)}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
 export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCardProps) {
   return (
     <button
@@ -36,7 +43,12 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${school.name}, ${school.address}, ${school.city}, NV ${school.zip ?? ''}`.trim())}`}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                const query = `${school.name}, ${school.address}, ${school.city}, NV ${school.zip ?? ''}`.trim()
+                window.open(getMapsUrl(query), '_blank', 'noopener,noreferrer')
+              }}
               className="text-xs text-blue-500 hover:underline mt-0.5 inline-block"
             >
               <span className="block">{school.address}</span>
