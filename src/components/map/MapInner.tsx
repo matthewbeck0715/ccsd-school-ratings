@@ -19,6 +19,7 @@ interface MapInnerProps {
 }
 
 const NEVADA_CENTER: [number, number] = [38.8, -116.8]
+const NEVADA_BOUNDS: [[number, number], [number, number]] = [[34.5, -120.5], [42.5, -113.5]]
 const MILES_TO_METERS = 1609.344
 
 
@@ -96,6 +97,8 @@ export default function MapInner({ filters, selectedSchool, isVisible, onSelectS
       center={proximity ? [proximity.lat, proximity.lng] : NEVADA_CENTER}
       zoom={proximity ? 12 : 6}
       minZoom={proximity ? 12 : 6}
+      maxBounds={NEVADA_BOUNDS}
+      maxBoundsViscosity={1.0}
       className="w-full h-full"
       style={{ zIndex: 0 }}
     >
