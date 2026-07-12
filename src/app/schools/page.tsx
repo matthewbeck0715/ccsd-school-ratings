@@ -76,6 +76,14 @@ function HomeContent() {
     setFilters(parseFilters(new URLSearchParams()))
   }
 
+  const handleZoneFallback = useCallback(() => {
+    setFilters((f) =>
+      f.proximity && f.proximity.radiusMiles === 0
+        ? { ...f, proximity: { ...f.proximity, radiusMiles: 5 } }
+        : f
+    )
+  }, [])
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -172,6 +180,7 @@ function HomeContent() {
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Distance</span>
               <ProximityStatus
                 proximity={filters.proximity}
+                county={filters.county}
                 onChange={(proximity) => setFilters((f) => ({ ...f, proximity, zonedSchoolIds: proximity === null ? [] : f.zonedSchoolIds }))}
               />
             </div>
@@ -209,6 +218,7 @@ function HomeContent() {
                 filters={filters}
                 onSelectSchool={handleSelectSchool}
                 onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
+                onZoneFallback={handleZoneFallback}
               />
             </div>
           )}
@@ -227,6 +237,7 @@ function HomeContent() {
               filters={filters}
               onSelectSchool={handleSelectSchool}
               onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
+              onZoneFallback={handleZoneFallback}
             />
           </div>
         </div>

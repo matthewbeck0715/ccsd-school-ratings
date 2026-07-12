@@ -103,6 +103,7 @@ export default function FilterDrawer({ filters, onChange, onClear, onViewSchools
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Distance</p>
               <ProximityStatus
                 proximity={filters.proximity}
+                county={filters.county}
                 onChange={(proximity) =>
                   onChange({ ...filters, proximity: proximity ?? null, zonedSchoolIds: proximity === null ? [] : filters.zonedSchoolIds })
                 }
