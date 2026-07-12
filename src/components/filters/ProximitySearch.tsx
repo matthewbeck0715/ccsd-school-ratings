@@ -30,7 +30,7 @@ export default function ProximitySearch({ proximity, onChange, onError }: Proxim
     setError(null); onError?.(null)
     try {
       const result = await geocodeAddress(trimmed)
-      onChange({ ...result, radiusMiles: proximity?.radiusMiles ?? 0 }, result.county)
+      onChange({ ...result, radiusMiles: 0 }, result.county)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Geocoding failed'
       setError(msg); onError?.(msg)
@@ -54,7 +54,7 @@ export default function ProximitySearch({ proximity, onChange, onError }: Proxim
         onChange({
           lat,
           lng,
-          radiusMiles: proximity?.radiusMiles ?? 0,
+          radiusMiles: 0,
           label: label ?? 'My location',
         }, county)
         if (label) setAddress(label)

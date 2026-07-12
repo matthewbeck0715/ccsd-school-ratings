@@ -127,9 +127,10 @@ interface FilterResultsProps {
   filters: FilterState
   onSelectSchool: (school: School) => void
   onZoneResult: (ids: string[]) => void
+  onZoneFallback: () => void
 }
 
-function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResultsProps) {
+function ProximityPanel({ filters, onSelectSchool, onZoneResult, onZoneFallback }: FilterResultsProps) {
   const proximity = filters.proximity!
   const isZone = proximity.radiusMiles === 0
 
@@ -139,6 +140,8 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
   const [zoneResult, setZoneResult] = useState<ZoneLookupResult | null>(null)
   const onZoneResultRef = useRef(onZoneResult)
   onZoneResultRef.current = onZoneResult
+  const onZoneFallbackRef = useRef(onZoneFallback)
+  onZoneFallbackRef.current = onZoneFallback
 
   useEffect(() => {
     if (!geojson || !allSchools.length) return
@@ -146,7 +149,12 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
     setZoneResult(r)
     const ids = [r.Elementary?.id, r.Middle?.id, r.High?.id].filter((id): id is string => id != null)
     onZoneResultRef.current(ids)
-  }, [proximity.lat, proximity.lng, geojson, allSchools])
+    // No school zone covers this point (data only exists for Clark/Washoe) — fall back to a
+    // radius search instead of silently showing zero results.
+    if (ids.length === 0 && proximity.radiusMiles === 0) {
+      onZoneFallbackRef.current()
+    }
+  }, [proximity.lat, proximity.lng, geojson, allSchools, proximity.radiusMiles])
 
   const { schools: nearbySchools, loading: nearbyLoading } = useSchools(filters)
 
@@ -251,9 +259,9 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
   )
 }
 
-export default function FilterResults({ filters, onSelectSchool, onZoneResult }: FilterResultsProps) {
+export default function FilterResults({ filters, onSelectSchool, onZoneResult, onZoneFallback }: FilterResultsProps) {
   if (filters.proximity) {
-    return <ProximityPanel filters={filters} onSelectSchool={onSelectSchool} onZoneResult={onZoneResult} />
+    return <ProximityPanel filters={filters} onSelectSchool={onSelectSchool} onZoneResult={onZoneResult} onZoneFallback={onZoneFallback} />
   }
   return <NonProximityPanel filters={filters} onSelectSchool={onSelectSchool} />
 }

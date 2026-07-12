@@ -14,11 +14,12 @@ interface FilterDrawerProps {
   filters: FilterState
   onChange: (filters: FilterState) => void
   onClear: () => void
+  onViewSchools: () => void
   filterCount: number
   schoolCount: number
 }
 
-export default function FilterDrawer({ filters, onChange, onClear, filterCount, schoolCount }: FilterDrawerProps) {
+export default function FilterDrawer({ filters, onChange, onClear, onViewSchools, filterCount, schoolCount }: FilterDrawerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [addressError, setAddressError] = useState<string | null>(null)
 
@@ -102,6 +103,7 @@ export default function FilterDrawer({ filters, onChange, onClear, filterCount, 
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Distance</p>
               <ProximityStatus
                 proximity={filters.proximity}
+                county={filters.county}
                 onChange={(proximity) =>
                   onChange({ ...filters, proximity: proximity ?? null, zonedSchoolIds: proximity === null ? [] : filters.zonedSchoolIds })
                 }
@@ -152,7 +154,7 @@ export default function FilterDrawer({ filters, onChange, onClear, filterCount, 
             Clear All
           </button>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={() => { onViewSchools(); setIsOpen(false) }}
             className="flex-1 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
           >
             View {schoolCount} {schoolCount === 1 ? 'School' : 'Schools'}
