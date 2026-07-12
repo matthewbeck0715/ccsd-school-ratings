@@ -195,6 +195,7 @@ function HomeContent() {
         filters={filters}
         onChange={setFilters}
         onClear={clearFilters}
+        onViewSchools={() => { setView('table'); setSelectedSchool(null) }}
         filterCount={filterCount}
         schoolCount={filteredSchools.length}
       />
