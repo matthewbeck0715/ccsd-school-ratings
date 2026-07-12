@@ -2,8 +2,10 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useSchools } from '@/hooks/useSchools'
+import { useCountyAverages } from '@/hooks/useCountyAverages'
 import StarRatingComponent from '@/components/StarRating'
 import type { FilterState, School, SchoolWithDistance } from '@/types/school'
+import { schoolDeltaAverage, formatDelta, deltaColor } from '@/utils/countyAverages'
 
 type SortKey = 'name' | 'level' | 'type' | 'starRating' | 'indexScore' | 'elaProficient' | 'mathProficient' | 'elaGrowth' | 'mathGrowth' | 'distanceMiles'
 
@@ -14,13 +16,27 @@ interface TableViewProps {
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 0] as const // 0 = all
 
-function fmtPct(val: number | string | null | undefined): string {
+// Right-aligns the integer part in a fixed-width box (3ch = widest case, "100") so the
+// decimal point lands in the same spot regardless of whether the integer part is 1, 2, or
+// 3 digits. Padding with spaces doesn't work here: space glyphs aren't the same width as
+// digit glyphs even with tabular-nums, so the padding amount would vary by font/zoom.
+function DecimalValue({ val, suffix }: { val: number; suffix: string }) {
+  const [intPart, decPart] = val.toFixed(1).split('.')
+  return (
+    <>
+      <span className="inline-block w-[3ch] text-right">{intPart}</span>.{decPart}{suffix}
+    </>
+  )
+}
+
+function fmtPct(val: number | string | null | undefined, suffix = '%') {
   if (val == null || val === '') return '—'
-  return `${Number(val).toFixed(1)}%`
+  return <DecimalValue val={Number(val)} suffix={suffix} />
 }
 
 export default function TableView({ filters, onSelectSchool }: TableViewProps) {
   const { schools, loading, error } = useSchools(filters)
+  const countyAvgMap = useCountyAverages()
   const [sortKey, setSortKey] = useState<SortKey>('indexScore')
   const [sortAsc, setSortAsc] = useState(false)
   const [page, setPage] = useState(0)
@@ -103,13 +119,13 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
               <th className={colClass + ' w-0'} onClick={() => handleSort('starRating')}>
                 Stars{indicator('starRating')}
               </th>
-              <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('indexScore')}>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('indexScore')}>
                 Score{indicator('indexScore')}
               </th>
-              <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('elaProficient')}>ELA Proficient{indicator('elaProficient')}</th>
-              <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('mathProficient')}>Math Proficient{indicator('mathProficient')}</th>
-              <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('elaGrowth')}>ELA Growth{indicator('elaGrowth')}</th>
-              <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('mathGrowth')}>Math Growth{indicator('mathGrowth')}</th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('elaProficient')}>ELA Proficient{indicator('elaProficient')}</th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('mathProficient')}>Math Proficient{indicator('mathProficient')}</th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('elaGrowth')}>ELA Growth{indicator('elaGrowth')}</th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('mathGrowth')}>Math Growth{indicator('mathGrowth')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
@@ -120,7 +136,11 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
                 </td>
               </tr>
             ) : (
-              pageSlice.map((school) => (
+              pageSlice.map((school) => {
+                const countyAvg = schoolDeltaAverage(countyAvgMap, school, filters)
+                const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
+                const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
+                return (
                 <tr key={school.id} className="group hover:bg-gray-50">
                   <td className="px-4 py-2 font-medium text-gray-900 sticky left-0 z-10 bg-white group-hover:bg-gray-50 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
                     {onSelectSchool ? (
@@ -144,13 +164,18 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
                   <td className="px-4 py-2 w-0">
                     <StarRatingComponent rating={school.starRating} />
                   </td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">{school.indexScore.toFixed(1)}</td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">{fmtPct(school.elaProficient)}</td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">{fmtPct(school.mathProficient)}</td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">{fmtPct(school.elaGrowth)}</td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">{fmtPct(school.mathGrowth)}</td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap"><DecimalValue val={school.indexScore} suffix="" /></td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">
+                    {fmtPct(school.elaProficient)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}
+                  </td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">
+                    {fmtPct(school.mathProficient)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}
+                  </td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.elaGrowth)}</td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.mathGrowth)}</td>
                 </tr>
-              ))
+                )
+              })
             )}
           </tbody>
         </table>
