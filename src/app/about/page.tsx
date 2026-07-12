@@ -25,7 +25,7 @@ export default function AboutPage() {
           </h1>
         </div>
         <Link
-          href={`${basePath}/`}
+          href={`${basePath}/schools`}
           className="text-sm text-blue-600 hover:text-blue-800 hover:underline shrink-0"
         >
           ← Back to map
