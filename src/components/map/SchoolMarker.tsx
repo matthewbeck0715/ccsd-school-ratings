@@ -5,16 +5,25 @@ import { Marker, Popup } from 'react-leaflet'
 import type L from 'leaflet'
 import { createMarkerIcon, getMarkerColor } from '@/utils/markerColors'
 import type { SchoolWithDistance } from '@/types/school'
+import { useCountyAverages } from '@/hooks/useCountyAverages'
+import { formatDelta, deltaColor, countyLevelKey } from '@/utils/countyAverages'
 
 interface SchoolMarkerProps {
   school: SchoolWithDistance
   isSelected?: boolean
   onSelect?: (school: SchoolWithDistance) => void
+  // Scope the deltas compare against — the selected county, or STATE_SCOPE when none.
+  avgScope: string
 }
 
-export default React.memo(function SchoolMarker({ school, isSelected, onSelect }: SchoolMarkerProps) {
+export default React.memo(function SchoolMarker({ school, isSelected, onSelect, avgScope }: SchoolMarkerProps) {
   const icon = createMarkerIcon(school.starRating)
   const markerRef = useRef<L.Marker>(null)
+  const countyAvgMap = useCountyAverages()
+  const countyAvg = countyAvgMap ? countyAvgMap.get(countyLevelKey(avgScope, school.level)) ?? null : null
+  // NDE only publishes county proficiency, so those are the only deltas we can show.
+  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
+  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
 
   useEffect(() => {
     if (isSelected && markerRef.current) {
@@ -56,12 +65,12 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect }
               <div className="font-medium">{school.indexScore}</div>
             </div>
             <div>
-              <div className="text-gray-400">ELA Proficiency</div>
-              <div className="font-medium">{school.elaProficiency != null ? `${school.elaProficiency}%` : '—'}</div>
+              <div className="text-gray-400">ELA Proficient</div>
+              <div className="font-medium">{school.elaProficient != null ? `${school.elaProficient}%` : '—'}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
             </div>
             <div>
-              <div className="text-gray-400">Math Proficiency</div>
-              <div className="font-medium">{school.mathProficiency != null ? `${school.mathProficiency}%` : '—'}</div>
+              <div className="text-gray-400">Math Proficient</div>
+              <div className="font-medium">{school.mathProficient != null ? `${school.mathProficient}%` : '—'}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
             </div>
             <div>
               <div className="text-gray-400">ELA Growth</div>
@@ -80,4 +89,5 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect }
   prev.school.id === next.school.id
   && prev.isSelected === next.isSelected
   && prev.onSelect === next.onSelect
+  && prev.avgScope === next.avgScope
 )

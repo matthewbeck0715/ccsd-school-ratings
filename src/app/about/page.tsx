@@ -62,7 +62,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Proficiency Metrics</h3>
           <p className="text-gray-700 leading-relaxed">
-            ELA Proficiency and Math Proficiency represent the percentage of
+            ELA Proficient and Math Proficient represent the percentage of
             students at a school who met grade-level standards on Nevada state assessments. These
             percentages reflect how well students are performing against established academic
             benchmarks in each subject area.
@@ -73,11 +73,14 @@ export default function AboutPage() {
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Growth Metrics</h3>
           <p className="text-gray-700 leading-relaxed">
-            ELA Growth and Math Growth measure year-over-year student progress. These scores are
-            expressed as a percentile ranking that compares each student&apos;s growth to that of
-            academic peers statewide — students who had similar prior test scores. A higher growth
-            percentile means students at the school are making more progress relative to comparable
-            students across Nevada.
+            ELA Growth and Math Growth come from the Nevada Growth Model, which measures
+            year-over-year student progress by comparing each student to academic peers statewide —
+            students who had similar prior test scores.
+          </p>
+          <p className="text-gray-700 leading-relaxed mt-3">
+            Each figure is the percentage of students at the school who met their individual growth
+            target for the year — the amount of progress needed to reach or stay proficient. A
+            higher percentage means more students are on track.
           </p>
         </section>
 
@@ -96,6 +99,17 @@ export default function AboutPage() {
             className="inline-block mt-2 text-blue-600 hover:text-blue-800 hover:underline break-all"
           >
             https://nevadareportcard.nv.gov/di/
+          </a>
+          <p className="text-gray-700 leading-relaxed mt-3">
+            Growth percentiles come from the Nevada Growth Model:
+          </p>
+          <a
+            href="https://ngma.bighorn.doe.nv.gov/nvgrowthmodel"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-2 text-blue-600 hover:text-blue-800 hover:underline break-all"
+          >
+            https://ngma.bighorn.doe.nv.gov/nvgrowthmodel
           </a>
         </section>
 

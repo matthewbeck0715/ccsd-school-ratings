@@ -7,7 +7,10 @@ import { useSchools } from '@/hooks/useSchools'
 import { useSchoolZones } from '@/hooks/useSchoolZones'
 import { findSchoolZonesForPoint, type ZoneLookupResult } from '@/utils/findSchoolZones'
 import { haversineDistanceMiles } from '@/utils/haversine'
-import SchoolCard from './SchoolCard'
+import SchoolCard, { METRIC_GRID_CLASS } from './SchoolCard'
+import { useCountyAverages } from '@/hooks/useCountyAverages'
+import { countyLevelKey, STATE_SCOPE } from '@/utils/countyAverages'
+import type { SchoolLevel } from '@/types/school'
 
 type SortKey = 'name' | 'starRating' | 'indexScore' | 'distanceMiles'
 
@@ -49,6 +52,12 @@ function SortBar({ sortKey, sortAsc, options, onSortKeyChange, onSortAscChange }
   )
 }
 
+// Carson City is an independent city, not a county — "Carson City County" would be wrong.
+function scopeLabel(scope: string): string {
+  if (scope === STATE_SCOPE) return 'Nevada statewide'
+  return scope === 'Carson City' ? scope : `${scope} County`
+}
+
 function sortSchools<T extends School>(schools: T[], sortKey: SortKey, sortAsc: boolean): T[] {
   return [...schools].sort((a, b) => {
     const av = (a as Record<string, unknown>)[sortKey]
@@ -73,6 +82,8 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
   const isZone = proximity.radiusMiles === 0
 
   const { schools: allSchools } = useSchools(DEFAULT_FILTERS)
+  const countyAvgMap = useCountyAverages()
+  const avgScope = filters.county ?? STATE_SCOPE
   const { geojson, loading: zonesLoading } = useSchoolZones(true)
   const [zoneResult, setZoneResult] = useState<ZoneLookupResult | null>(null)
   const onZoneResultRef = useRef(onZoneResult)
@@ -118,6 +129,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
               key={s.id}
               school={s}
               distanceMiles={s.lat != null && s.lng != null ? haversineDistanceMiles(proximity.lat, proximity.lng, s.lat, s.lng) : null}
+              countyAvg={countyAvgMap ? countyAvgMap.get(countyLevelKey(avgScope, s.level)) ?? null : null}
               onSelect={onSelectSchool}
             />
           ))}
@@ -138,7 +150,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
       </div>
       <div className="flex flex-col gap-3">
         {sortedNearby.map((school) => (
-          <SchoolCard key={school.id} school={school} distanceMiles={school.distanceMiles} onSelect={onSelectSchool} />
+          <SchoolCard key={school.id} school={school} distanceMiles={school.distanceMiles} countyAvg={countyAvgMap ? countyAvgMap.get(countyLevelKey(avgScope, school.level)) ?? null : null} onSelect={onSelectSchool} />
         ))}
       </div>
     </div>
@@ -147,6 +159,7 @@ function ProximityPanel({ filters, onSelectSchool, onZoneResult }: FilterResults
 
 function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps, 'filters' | 'onSelectSchool'>) {
   const { schools, loading } = useSchools(filters)
+  const countyAvgMap = useCountyAverages()
 
   const [sortKey, setSortKey] = useState<SortKey>('indexScore')
   const [sortAsc, setSortAsc] = useState(false)
@@ -156,6 +169,18 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
     [schools, sortKey, sortAsc]
   )
 
+  const LEVELS: SchoolLevel[] = ['Elementary', 'Middle', 'High']
+  // Drive the order from LEVELS, not filters.schoolLevels — the latter is ordered by
+  // the sequence the user clicked the filters in.
+  const activeLevels = LEVELS.filter(
+    l => filters.schoolLevels.length === 0 || filters.schoolLevels.includes(l)
+  )
+  // With no county selected there is no county to average, so fall back to statewide.
+  const avgScope = filters.county ?? STATE_SCOPE
+  const countyLevelAvgs = countyAvgMap
+    ? activeLevels.map(l => countyAvgMap.get(countyLevelKey(avgScope, l))).filter(Boolean)
+    : []
+
   if (loading) return (
     <div className="bg-white px-4 py-2 text-xs text-gray-500">
       Loading…
@@ -164,6 +189,28 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
 
   return (
     <div className="bg-white px-4 py-3 h-full">
+      {countyLevelAvgs.length > 0 && (
+        <div className="mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-blue-700">
+          <div className="font-semibold text-blue-800 text-sm leading-tight mb-1">{scopeLabel(avgScope)} averages</div>
+          <div className="flex flex-col gap-2">
+            {countyLevelAvgs.map(a => a && (
+              <div key={a.level} className="flex gap-4 items-start">
+                <div className="flex-1 min-w-0 text-xs font-semibold text-blue-800">{a.level}</div>
+                <div className={METRIC_GRID_CLASS}>
+                  <div>
+                    <div className="text-blue-400">ELA Proficient</div>
+                    <div className="font-medium">{a.elaProficient != null ? `${a.elaProficient.toFixed(1)}%` : '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-blue-400">Math Proficient</div>
+                    <div className="font-medium">{a.mathProficient != null ? `${a.mathProficient.toFixed(1)}%` : '—'}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs text-gray-500 font-medium">
 {schools.length === 0 ? 'No' : schools.length} {schools.length === 1 ? 'school' : 'schools'} matched
@@ -172,7 +219,12 @@ function NonProximityPanel({ filters, onSelectSchool }: Pick<FilterResultsProps,
       </div>
       <div className="flex flex-col gap-3">
         {sorted.map((school) => (
-          <SchoolCard key={school.id} school={school} onSelect={onSelectSchool} />
+          <SchoolCard
+            key={school.id}
+            school={school}
+            countyAvg={countyAvgMap ? countyAvgMap.get(countyLevelKey(avgScope, school.level)) ?? null : null}
+            onSelect={onSelectSchool}
+          />
         ))}
       </div>
     </div>

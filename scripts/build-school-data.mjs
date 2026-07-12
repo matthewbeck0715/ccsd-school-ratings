@@ -55,6 +55,11 @@ function loadCsv(filePath) {
 const ratingsRows = loadCsv(join(dataDir, 'nv-school-ratings.csv'))
 const locationRows = loadCsv(join(dataDir, 'nv-school-locations.csv'))
 
+// Nevada Growth Model medians, keyed by NSPF school code.
+// Regenerate with `node scripts/fetch-growth-data.mjs`.
+const growthById = JSON.parse(readFileSync(join(dataDir, 'nv-growth-2025.json'), 'utf8'))
+const NO_GROWTH = { elaMgp: null, mathMgp: null, elaMgpN: null, mathMgpN: null }
+
 // --- Step B: Build location lookups ---
 // By exact lowercase name
 const locationByName = {}
@@ -483,11 +488,12 @@ for (const row of ratingsRows) {
     county,
     starRating: parseStarRating(row['Star Rating']),
     indexScore,
-    elaProficiency: parseNum(row['% Proficient ELA']),
-    mathProficiency: parseNum(row['% Proficient Math']),
-    scienceProficiency: parseNum(row['% Proficient Science']),
+    elaProficient: parseNum(row['% Proficient ELA']),
+    mathProficient: parseNum(row['% Proficient Math']),
+    scienceProficient: parseNum(row['% Proficient Science']),
     elaGrowth: parseNum(row['% Meeting AGP ELA']),
     mathGrowth: parseNum(row['% Meeting AGP Math']),
+    ...(growthById[id] ?? NO_GROWTH),
     titleI: parseBool(row['Title I Status']),
     lat,
     lng,
@@ -502,3 +508,4 @@ writeFileSync(join(dataDir, 'nv-school-data.json'), JSON.stringify(schools, null
 
 console.log(`Done. Kept: ${schools.length}, Filtered: ${filtered}`)
 console.log(`  Exact match: ${exactMatched}, Manual: ${manualMatched}, Auto-match: ${autoMatched}, Unmatched: ${unmatched}`)
+console.log(`  Growth MGP: ${schools.filter(s => s.elaMgp !== null).length} ELA, ${schools.filter(s => s.mathMgp !== null).length} Math`)

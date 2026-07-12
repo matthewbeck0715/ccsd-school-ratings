@@ -2,10 +2,18 @@
 
 import type { School } from '@/types/school'
 import { getMarkerColor } from '@/utils/markerColors'
+import type { CountyLevelAverages } from '@/utils/countyAverages'
+import { formatDelta, deltaColor } from '@/utils/countyAverages'
+
+// Shared by the county-averages banner so its tiles land in the same columns as the
+// cards below it. The width is fixed rather than content-sized: each grid would
+// otherwise size to its own widest cell and the two would drift out of alignment.
+export const METRIC_GRID_CLASS = 'grid grid-cols-2 gap-x-4 gap-y-1 text-xs shrink-0 w-56'
 
 interface SchoolCardProps {
   school: School
   distanceMiles?: number | null
+  countyAvg?: CountyLevelAverages | null
   onSelect: (school: School) => void
 }
 
@@ -20,7 +28,11 @@ function getMapsUrl(query: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
 
-export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCardProps) {
+export default function SchoolCard({ school, distanceMiles, countyAvg, onSelect }: SchoolCardProps) {
+  // NDE only publishes county proficiency, so those are the only deltas we can show.
+  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
+  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
+
   return (
     <button
       onClick={() => onSelect(school)}
@@ -56,7 +68,7 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
             </a>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs shrink-0">
+        <div className={METRIC_GRID_CLASS}>
           <div>
             <div className="text-gray-400">Stars</div>
             <div className="font-medium" style={{ color: getMarkerColor(school.starRating) }}>{school.starRating !== null ? '★'.repeat(school.starRating) : 'NR'}</div>
@@ -66,12 +78,12 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
             <div className="font-medium">{school.indexScore}</div>
           </div>
           <div>
-            <div className="text-gray-400">ELA Proficiency</div>
-            <div className="font-medium">{pct(school.elaProficiency)}</div>
+            <div className="text-gray-400">ELA Proficient</div>
+            <div className="font-medium">{pct(school.elaProficient)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
           </div>
           <div>
-            <div className="text-gray-400">Math Proficiency</div>
-            <div className="font-medium">{pct(school.mathProficiency)}</div>
+            <div className="text-gray-400">Math Proficient</div>
+            <div className="font-medium">{pct(school.mathProficient)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
           </div>
           <div>
             <div className="text-gray-400">ELA Growth</div>
