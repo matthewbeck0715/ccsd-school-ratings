@@ -6,6 +6,7 @@ import { useCallback, useEffect } from 'react'
 import { useSchools } from '@/hooks/useSchools'
 import { createUserLocationIcon } from '@/utils/markerColors'
 import { COUNTY_VIEWS } from '@/utils/countyViews'
+import { STATE_SCOPE } from '@/utils/countyAverages'
 import type { FilterState, School } from '@/types/school'
 import ZoneBoundaries from './ZoneBoundaries'
 import CountyClusterMarkers from './CountyClusterMarkers'
@@ -137,6 +138,7 @@ export default function MapInner({ filters, selectedSchool, isVisible, onSelectS
         onSelectSchool={onSelectSchool}
         forceIndividual={!!filters.county || !!filters.proximity}
         onCountyFilter={onCountyFilter}
+        avgScope={filters.county ?? STATE_SCOPE}
       />
     </MapContainer>
   )

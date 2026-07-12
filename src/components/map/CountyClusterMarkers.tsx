@@ -14,6 +14,7 @@ interface CountyClusterMarkersProps {
   onSelectSchool?: (school: School) => void
   forceIndividual?: boolean
   onCountyFilter?: (county: string) => void
+  avgScope: string
 }
 
 export default function CountyClusterMarkers({
@@ -22,6 +23,7 @@ export default function CountyClusterMarkers({
   onSelectSchool,
   forceIndividual,
   onCountyFilter,
+  avgScope,
 }: CountyClusterMarkersProps) {
   const map = useMapEvents({
     zoomend: () => setZoom(map.getZoom()),
@@ -60,6 +62,7 @@ export default function CountyClusterMarkers({
             school={school}
             isSelected={selectedSchool?.id === school.id}
             onSelect={onSelectSchool}
+            avgScope={avgScope}
           />
         ))}
       </>

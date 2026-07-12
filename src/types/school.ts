@@ -10,11 +10,17 @@ export interface School {
   county: string | null
   starRating: StarRating | null
   indexScore: number
-  elaProficiency: number | string | null
-  mathProficiency: number | string | null
-  scienceProficiency: number | string | null
+  elaProficient: number | string | null
+  mathProficient: number | string | null
+  scienceProficient: number | string | null
   elaGrowth: number | string | null
   mathGrowth: number | string | null
+  // Median growth percentile, from the Nevada Growth Model. Only reported for
+  // grades 3-8, so these are always null for High schools.
+  elaMgp: number | null
+  mathMgp: number | null
+  elaMgpN: number | null
+  mathMgpN: number | null
   titleI: boolean
   lat: number | null
   lng: number | null

@@ -5,6 +5,11 @@ import { getMarkerColor } from '@/utils/markerColors'
 import type { CountyLevelAverages } from '@/utils/countyAverages'
 import { formatDelta, deltaColor } from '@/utils/countyAverages'
 
+// Shared by the county-averages banner so its tiles land in the same columns as the
+// cards below it. The width is fixed rather than content-sized: each grid would
+// otherwise size to its own widest cell and the two would drift out of alignment.
+export const METRIC_GRID_CLASS = 'grid grid-cols-2 gap-x-4 gap-y-1 text-xs shrink-0 w-56'
+
 interface SchoolCardProps {
   school: School
   distanceMiles?: number | null
@@ -24,11 +29,9 @@ function getMapsUrl(query: string): string {
 }
 
 export default function SchoolCard({ school, distanceMiles, countyAvg, onSelect }: SchoolCardProps) {
-  const scoreDelta = countyAvg ? formatDelta(school.indexScore, countyAvg.avgIndexScore) : null
-  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficiency === 'number' ? school.elaProficiency : null, countyAvg.avgElaProficiency) : null
-  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficiency === 'number' ? school.mathProficiency : null, countyAvg.avgMathProficiency) : null
-  const elaGrowthDelta = countyAvg ? formatDelta(typeof school.elaGrowth === 'number' ? school.elaGrowth : null, countyAvg.avgElaGrowth) : null
-  const mathGrowthDelta = countyAvg ? formatDelta(typeof school.mathGrowth === 'number' ? school.mathGrowth : null, countyAvg.avgMathGrowth) : null
+  // NDE only publishes county proficiency, so those are the only deltas we can show.
+  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
+  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
 
   return (
     <button
@@ -65,30 +68,30 @@ export default function SchoolCard({ school, distanceMiles, countyAvg, onSelect 
             </a>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs shrink-0">
+        <div className={METRIC_GRID_CLASS}>
           <div>
             <div className="text-gray-400">Stars</div>
             <div className="font-medium" style={{ color: getMarkerColor(school.starRating) }}>{school.starRating !== null ? '★'.repeat(school.starRating) : 'NR'}</div>
           </div>
           <div>
             <div className="text-gray-400">Score</div>
-            <div className="font-medium">{school.indexScore}{scoreDelta && <span className={`ml-1 font-normal ${deltaColor(scoreDelta)}`}>({scoreDelta})</span>}</div>
+            <div className="font-medium">{school.indexScore}</div>
           </div>
           <div>
-            <div className="text-gray-400">ELA Proficiency</div>
-            <div className="font-medium">{pct(school.elaProficiency)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
+            <div className="text-gray-400">ELA Proficient</div>
+            <div className="font-medium">{pct(school.elaProficient)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
           </div>
           <div>
-            <div className="text-gray-400">Math Proficiency</div>
-            <div className="font-medium">{pct(school.mathProficiency)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
+            <div className="text-gray-400">Math Proficient</div>
+            <div className="font-medium">{pct(school.mathProficient)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
           </div>
           <div>
             <div className="text-gray-400">ELA Growth</div>
-            <div className="font-medium">{pct(school.elaGrowth)}{elaGrowthDelta && <span className={`ml-1 font-normal ${deltaColor(elaGrowthDelta)}`}>({elaGrowthDelta}%)</span>}</div>
+            <div className="font-medium">{pct(school.elaGrowth)}</div>
           </div>
           <div>
             <div className="text-gray-400">Math Growth</div>
-            <div className="font-medium">{pct(school.mathGrowth)}{mathGrowthDelta && <span className={`ml-1 font-normal ${deltaColor(mathGrowthDelta)}`}>({mathGrowthDelta}%)</span>}</div>
+            <div className="font-medium">{pct(school.mathGrowth)}</div>
           </div>
         </div>
       </div>
