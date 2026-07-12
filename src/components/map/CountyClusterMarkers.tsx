@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from 'react'
 import { useMapEvents } from 'react-leaflet'
 import SchoolMarker from './SchoolMarker'
 import CountyPolygons from './CountyPolygons'
-import type { School, SchoolWithDistance } from '@/types/school'
+import type { FilterState, School, SchoolWithDistance } from '@/types/school'
 
 const CLUSTER_ZOOM_THRESHOLD = 9
 
@@ -14,7 +14,8 @@ interface CountyClusterMarkersProps {
   onSelectSchool?: (school: School) => void
   forceIndividual?: boolean
   onCountyFilter?: (county: string) => void
-  avgScope: string
+  // Picks the scope the popup deltas compare against — see schoolDeltaAverage.
+  filters: FilterState
 }
 
 export default function CountyClusterMarkers({
@@ -23,7 +24,7 @@ export default function CountyClusterMarkers({
   onSelectSchool,
   forceIndividual,
   onCountyFilter,
-  avgScope,
+  filters,
 }: CountyClusterMarkersProps) {
   const map = useMapEvents({
     zoomend: () => setZoom(map.getZoom()),
@@ -62,7 +63,7 @@ export default function CountyClusterMarkers({
             school={school}
             isSelected={selectedSchool?.id === school.id}
             onSelect={onSelectSchool}
-            avgScope={avgScope}
+            filters={filters}
           />
         ))}
       </>
