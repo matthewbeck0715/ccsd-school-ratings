@@ -71,6 +71,14 @@ export function useSchools(filters: FilterState) {
         if (distanceMiles > filters.proximity.radiusMiles) continue
       } else if (filters.proximity && filters.proximity.radiusMiles === 0) {
         if (filters.zonedSchoolIds.length === 0 || !filters.zonedSchoolIds.includes(school.id)) continue
+        if (school.lat !== null && school.lng !== null) {
+          distanceMiles = haversineDistanceMiles(
+            filters.proximity.lat,
+            filters.proximity.lng,
+            school.lat,
+            school.lng
+          )
+        }
       }
 
       result.push({ ...school, distanceMiles })
