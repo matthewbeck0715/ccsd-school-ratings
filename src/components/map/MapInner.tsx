@@ -2,16 +2,18 @@
 
 import 'leaflet/dist/leaflet.css'
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useSchools } from '@/hooks/useSchools'
 import { createUserLocationIcon } from '@/utils/markerColors'
 import { COUNTY_VIEWS } from '@/utils/countyViews'
+import { haversineDistanceMiles } from '@/utils/haversine'
 import type { FilterState, School } from '@/types/school'
 import ZoneBoundaries from './ZoneBoundaries'
 import CountyClusterMarkers from './CountyClusterMarkers'
 
 interface MapInnerProps {
   filters: FilterState
+  allSchools: School[]
   selectedSchool?: School | null
   isVisible?: boolean
   onSelectSchool?: (school: School) => void
@@ -69,14 +71,34 @@ function CountyFocus({ county }: { county: string | null }) {
   return null
 }
 
-export default function MapInner({ filters, selectedSchool, isVisible, onSelectSchool, onCountyFilter, compareIds, onToggleCompare, canAddCompare }: MapInnerProps) {
+export default function MapInner({ filters, allSchools, selectedSchool, isVisible, onSelectSchool, onCountyFilter, compareIds, onToggleCompare, canAddCompare }: MapInnerProps) {
   const { schools, loading, error } = useSchools(filters)
+
+  const isZone = !!filters.proximity && filters.proximity.radiusMiles === 0 && filters.zonedSchoolIds.length > 0
+
+  // Zone mode's "nearby" cards bypass the other filters (they show whichever school is
+  // zoned for the point, regardless of type/level/star/search/county) — the map otherwise
+  // has no equivalent, so a zoned school excluded by an unrelated filter would show a card
+  // but no marker. Merge it back in so the map stays consistent with the cards.
+  const displaySchools = useMemo(() => {
+    if (!isZone) return schools
+    const present = new Set(schools.map((s) => s.id))
+    const missing = allSchools
+      .filter((s) => filters.zonedSchoolIds.includes(s.id) && !present.has(s.id))
+      .map((s) => ({
+        ...s,
+        distanceMiles: s.lat != null && s.lng != null
+          ? haversineDistanceMiles(filters.proximity!.lat, filters.proximity!.lng, s.lat, s.lng)
+          : null,
+      }))
+    return missing.length ? [...schools, ...missing] : schools
+  }, [schools, allSchools, isZone, filters.zonedSchoolIds, filters.proximity])
 
   const handleZoneClick = useCallback((schoolId: string) => {
     if (!onSelectSchool) return
-    const school = schools.find(s => s.id === schoolId)
+    const school = displaySchools.find(s => s.id === schoolId)
     if (school) onSelectSchool(school)
-  }, [schools, onSelectSchool])
+  }, [displaySchools, onSelectSchool])
   const proximity = filters.proximity
 
   if (loading) {
@@ -135,7 +157,7 @@ export default function MapInner({ filters, selectedSchool, isVisible, onSelectS
         <ZoneBoundaries zonedSchoolIds={filters.zonedSchoolIds} selectedSchoolId={selectedSchool?.id ?? null} onZoneClick={handleZoneClick} />
       )}
       <CountyClusterMarkers
-        schools={schools}
+        schools={displaySchools}
         selectedSchool={selectedSchool}
         onSelectSchool={onSelectSchool}
         forceIndividual={!!filters.county || !!filters.proximity}

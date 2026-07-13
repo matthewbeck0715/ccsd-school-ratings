@@ -28,12 +28,15 @@ export default function StarFilter({ value, onChange }: StarFilterProps) {
             key={star ?? 'nr'}
             onClick={() => toggle(star)}
             title={star !== null ? `${star} star${star !== 1 ? 's' : ''}` : 'Not Rated'}
-            className={`w-8 py-0.5 rounded text-xs font-bold border transition-colors ${
+            className={`inline-flex items-center justify-center gap-0.5 w-10 py-0.5 rounded text-xs font-bold border transition-colors ${
               active ? 'text-white border-transparent' : 'bg-white border-gray-300 hover:border-gray-400'
             }`}
             style={active ? { backgroundColor: color, borderColor: color } : { color }}
           >
             {star !== null ? `${star}★` : 'NR'}
+            <span aria-hidden="true" className="inline-block w-2.5 text-center opacity-70">
+              {active ? '×' : '+'}
+            </span>
           </button>
         )
       })}

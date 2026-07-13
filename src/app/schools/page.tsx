@@ -322,11 +322,10 @@ function HomeContent() {
       {/* Comparison tray — sits under the filter bar so it's visible from both map and list
           views. Hidden once the compare view itself is open, since "Back to results" on any
           column already provides a way out. */}
-      {pinnedForCompare.length > 0 && !compareMode && (
+      {!compareMode && (
         <CompareTray
           schools={pinnedForCompare}
           onRemove={handleRemoveCompare}
-          onClear={handleClearCompare}
           onView={handleViewCompare}
         />
       )}
@@ -366,6 +365,7 @@ function HomeContent() {
           <div className={view === 'map' ? 'flex-1 min-h-0' : 'hidden'}>
             <MapView
               filters={filters}
+              allSchools={allSchools}
               selectedSchool={selectedSchool}
               isVisible={view === 'map' && !showCompareView}
               onSelectSchool={handleSelectSchool}
