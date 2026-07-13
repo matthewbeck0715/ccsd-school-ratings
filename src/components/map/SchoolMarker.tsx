@@ -12,9 +12,12 @@ interface SchoolMarkerProps {
   isSelected?: boolean
   onSelect?: (school: SchoolWithDistance) => void
   isMapVisible?: boolean
+  isComparing?: boolean
+  onToggleCompare?: (school: SchoolWithDistance) => void
+  canAddCompare?: boolean
 }
 
-export default React.memo(function SchoolMarker({ school, isSelected, onSelect, isMapVisible = true }: SchoolMarkerProps) {
+export default React.memo(function SchoolMarker({ school, isSelected, onSelect, isMapVisible = true, isComparing, onToggleCompare, canAddCompare = true }: SchoolMarkerProps) {
   const icon = createMarkerIcon(school.starRating)
   const markerRef = useRef<L.Marker>(null)
 
@@ -91,6 +94,15 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
               <div className="font-medium">{school.mathMgp != null ? formatPercentile(school.mathMgp) : '—'}</div>
             </div>
           </div>
+          {onToggleCompare && (
+            <button
+              onClick={() => onToggleCompare(school)}
+              disabled={!isComparing && !canAddCompare}
+              className="mt-2 w-full rounded border px-2 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 border-blue-200 text-blue-600 hover:bg-blue-50 disabled:hover:bg-transparent"
+            >
+              {isComparing ? '✓ Added to Compare' : '+ Add to Compare'}
+            </button>
+          )}
         </div>
       </Popup>
     </Marker>
@@ -100,4 +112,7 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
   && prev.isSelected === next.isSelected
   && prev.onSelect === next.onSelect
   && prev.isMapVisible === next.isMapVisible
+  && prev.isComparing === next.isComparing
+  && prev.onToggleCompare === next.onToggleCompare
+  && prev.canAddCompare === next.canAddCompare
 )

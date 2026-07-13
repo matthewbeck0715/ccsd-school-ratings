@@ -16,6 +16,9 @@ interface MapInnerProps {
   isVisible?: boolean
   onSelectSchool?: (school: School) => void
   onCountyFilter?: (county: string) => void
+  compareIds?: Set<string>
+  onToggleCompare?: (school: School) => void
+  canAddCompare?: boolean
 }
 
 const NEVADA_CENTER: [number, number] = [38.8, -116.8]
@@ -66,7 +69,7 @@ function CountyFocus({ county }: { county: string | null }) {
   return null
 }
 
-export default function MapInner({ filters, selectedSchool, isVisible, onSelectSchool, onCountyFilter }: MapInnerProps) {
+export default function MapInner({ filters, selectedSchool, isVisible, onSelectSchool, onCountyFilter, compareIds, onToggleCompare, canAddCompare }: MapInnerProps) {
   const { schools, loading, error } = useSchools(filters)
 
   const handleZoneClick = useCallback((schoolId: string) => {
@@ -138,6 +141,9 @@ export default function MapInner({ filters, selectedSchool, isVisible, onSelectS
         forceIndividual={!!filters.county || !!filters.proximity}
         onCountyFilter={onCountyFilter}
         isMapVisible={isVisible ?? true}
+        compareIds={compareIds}
+        onToggleCompare={onToggleCompare}
+        canAddCompare={canAddCompare}
       />
     </MapContainer>
   )

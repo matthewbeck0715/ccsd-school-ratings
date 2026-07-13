@@ -16,12 +16,24 @@ interface MapViewProps {
   isVisible?: boolean
   onSelectSchool?: (school: School) => void
   onCountyFilter?: (county: string) => void
+  compareIds?: Set<string>
+  onToggleCompare?: (school: School) => void
+  canAddCompare?: boolean
 }
 
-export default function MapView({ filters, selectedSchool, isVisible, onSelectSchool, onCountyFilter }: MapViewProps) {
+export default function MapView({ filters, selectedSchool, isVisible, onSelectSchool, onCountyFilter, compareIds, onToggleCompare, canAddCompare }: MapViewProps) {
   return (
     <div className="w-full h-full">
-      <MapInner filters={filters} selectedSchool={selectedSchool} isVisible={isVisible} onSelectSchool={onSelectSchool} onCountyFilter={onCountyFilter} />
+      <MapInner
+        filters={filters}
+        selectedSchool={selectedSchool}
+        isVisible={isVisible}
+        onSelectSchool={onSelectSchool}
+        onCountyFilter={onCountyFilter}
+        compareIds={compareIds}
+        onToggleCompare={onToggleCompare}
+        canAddCompare={canAddCompare}
+      />
     </div>
   )
 }
