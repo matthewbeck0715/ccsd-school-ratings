@@ -181,6 +181,7 @@ function HomeContent() {
 
   function clearFilters() {
     setFilters(parseFilters(new URLSearchParams()))
+    handleClearCompare()
   }
 
   const handleZoneFallback = useCallback(() => {

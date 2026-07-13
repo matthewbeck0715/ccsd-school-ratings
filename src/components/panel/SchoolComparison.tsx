@@ -334,20 +334,20 @@ export default function SchoolComparison({ school, distanceMiles, onClear }: {
             }}
           />
           <MetricBar
+            label="Math % Met AGP"
+            value={toNum(school.mathGrowth)}
+            tooltip={{
+              name: 'Adequate Growth Percentile',
+              description: "Each student has their own AGP, a growth target based on reaching or staying proficient. This metric is the percentage of students who met their individual AGP.",
+            }}
+          />
+          <MetricBar
             label="ELA MGP"
             value={school.elaMgp}
             unit="percentile"
             tooltip={{
               name: 'Median Growth Percentile',
               description: "Each student gets a growth percentile from the Nevada Growth Model, based on their year-over-year progress compared to academic peers statewide with similar prior test scores. This metric is the median of those individual percentiles across the school; 50 is typical growth.",
-            }}
-          />
-          <MetricBar
-            label="Math % Met AGP"
-            value={toNum(school.mathGrowth)}
-            tooltip={{
-              name: 'Adequate Growth Percentile',
-              description: "Each student has their own AGP, a growth target based on reaching or staying proficient. This metric is the percentage of students who met their individual AGP.",
             }}
           />
           <MetricBar
