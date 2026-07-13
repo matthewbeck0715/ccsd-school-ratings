@@ -183,6 +183,13 @@ function CopyLinkButton({ school }: { school: School }) {
         if (school.county) url.searchParams.set('county', school.county)
         else url.searchParams.delete('county')
         url.searchParams.set('levels', school.level)
+        // Never let a shared link carry the proximity search — it can reveal the sharer's
+        // home/work address. The URL sync effect strips these within ~300ms of any change, but
+        // don't rely on that timing here.
+        url.searchParams.delete('lat')
+        url.searchParams.delete('lng')
+        url.searchParams.delete('radius')
+        url.searchParams.delete('label')
         try {
           await navigator.clipboard.writeText(url.toString())
           setCopied(true)

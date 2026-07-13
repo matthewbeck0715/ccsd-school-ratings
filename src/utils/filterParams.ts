@@ -28,12 +28,9 @@ export function serializeFilters(filters: FilterState): URLSearchParams {
     params.set('stars', filters.starRatings.map(s => (s === null ? '0' : String(s))).join(','))
   }
   if (filters.county) params.set('county', filters.county)
-  if (filters.proximity) {
-    params.set('lat', String(filters.proximity.lat))
-    params.set('lng', String(filters.proximity.lng))
-    params.set('radius', String(filters.proximity.radiusMiles))
-    params.set('label', filters.proximity.label)
-  }
+  // Proximity (lat/lng/radius/label) is deliberately never written to the URL — it can carry a
+  // user's home/work address, and the URL is what gets copied, bookmarked, and logged. It still
+  // gets parsed below for backward compatibility with old links, but never re-serialized.
 
   return params
 }
