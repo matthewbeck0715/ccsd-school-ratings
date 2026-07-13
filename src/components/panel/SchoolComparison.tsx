@@ -204,6 +204,35 @@ function MetricBar({ label, value, county = null, state = null, countyName = nul
   )
 }
 
+function CopyLinkButton({ school }: { school: School }) {
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        const url = new URL(window.location.href)
+        url.searchParams.set('ids', school.id)
+        // Set directly rather than relying on the debounced address-bar sync to have already run
+        // — the link is correct even if copied immediately after selecting the school.
+        if (school.county) url.searchParams.set('county', school.county)
+        else url.searchParams.delete('county')
+        url.searchParams.set('levels', school.level)
+        try {
+          await navigator.clipboard.writeText(url.toString())
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        } catch {
+          // Clipboard unavailable (permissions, insecure context) — nothing more to do.
+        }
+      }}
+      className="shrink-0 rounded px-1 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors"
+    >
+      {copied ? 'Copied!' : 'Copy link'}
+    </button>
+  )
+}
+
 function Section({ title, children }: {
   title: string
   children: ReactNode
@@ -231,12 +260,15 @@ export default function SchoolComparison({ school, distanceMiles, onClear }: {
     <div>
       {/* The chart stands in for the whole results list, so the way back is a back control,
           not a dismiss ✕ on something sitting above the list. */}
-      <button
-        onClick={onClear}
-        className="mb-3 -ml-1 rounded px-1 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors"
-      >
-        ← Back to results
-      </button>
+      <div className="mb-3 -ml-1 flex items-center justify-between">
+        <button
+          onClick={onClear}
+          className="rounded px-1 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50 hover:text-blue-800 transition-colors"
+        >
+          ← Back to results
+        </button>
+        <CopyLinkButton school={school} />
+      </div>
 
       <div className="mb-3">
         <div className="flex items-baseline gap-2">

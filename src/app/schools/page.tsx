@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { FilterState, School } from '@/types/school'
+import { DEFAULT_FILTERS } from '@/types/school'
 import SchoolSearch from '@/components/filters/SchoolSearch'
 import CountyFilter from '@/components/filters/CountyFilter'
 import LevelFilter from '@/components/filters/LevelFilter'
@@ -17,7 +18,7 @@ import MapView from '@/components/map/MapView'
 import TableView from '@/components/table/TableView'
 import FilterResults from '@/components/panel/FilterResults'
 import SchoolComparison from '@/components/panel/SchoolComparison'
-import { hasActiveFilters, parseFilters, serializeFilters } from '@/utils/filterParams'
+import { hasActiveFilters, parseFilters, parseSchoolIds, serializeFilters, serializeSchoolIds } from '@/utils/filterParams'
 
 // Tailwind's xl breakpoint — the width at which the results panel appears beside the map.
 const DESKTOP_QUERY = '(min-width: 1280px)'
@@ -30,8 +31,30 @@ function HomeContent() {
   const [filters, setFilters] = useState<FilterState>(() => parseFilters(searchParams))
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [addressError, setAddressError] = useState<string | null>(null)
+  const [pendingSchoolId] = useState<string | null>(() => parseSchoolIds(searchParams)[0] ?? null)
   const isPopState = useRef(false)
   const mobileListRef = useRef<HTMLDivElement>(null)
+
+  // Unfiltered list, used only to resolve a deep-linked school id (from ?ids=) against — the
+  // "filtered" school list depends on filter state that hasn't necessarily been set to match it.
+  const { schools: allSchools } = useSchools(DEFAULT_FILTERS)
+  const allSchoolsRef = useRef<School[]>(allSchools)
+  allSchoolsRef.current = allSchools
+
+  // Resolves a school id from the URL on first load — once, since selection afterward is driven
+  // by clicks (and popstate, below), not by re-reading the initial searchParams.
+  const resolvedPendingSchool = useRef(false)
+  useEffect(() => {
+    if (resolvedPendingSchool.current || !pendingSchoolId || allSchools.length === 0) return
+    resolvedPendingSchool.current = true
+    const match = allSchools.find((s) => s.id === pendingSchoolId)
+    if (!match) return
+    setSelectedSchool(match)
+    // Mobile's map view has no side panel — only a marker popup — so the comparison panel needs
+    // the list/table view to be visible there. Desktop keeps the map, where the panel already
+    // renders alongside it.
+    setView(window.matchMedia(DESKTOP_QUERY).matches ? 'map' : 'table')
+  }, [pendingSchoolId, allSchools])
 
   // The chart takes the banner's place at the top of the list, so a card tapped further down
   // would swap in a chart the user can't see. Bring it back into view.
@@ -42,7 +65,10 @@ function HomeContent() {
   useEffect(() => {
     function handlePopState() {
       isPopState.current = true
-      setFilters(parseFilters(new URLSearchParams(window.location.search)))
+      const params = new URLSearchParams(window.location.search)
+      setFilters(parseFilters(params))
+      const id = parseSchoolIds(params)[0] ?? null
+      setSelectedSchool(id ? allSchoolsRef.current.find((s) => s.id === id) ?? null : null)
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -54,12 +80,14 @@ function HomeContent() {
       return
     }
     const params = serializeFilters(filters)
+    const idsParam = serializeSchoolIds(selectedSchool ? [selectedSchool.id] : [])
+    if (idsParam) params.set('ids', idsParam)
     const qs = params.toString()
     const timer = setTimeout(() => {
       router.push(qs ? `/schools?${qs}` : '/schools', { scroll: false })
     }, 300)
     return () => clearTimeout(timer)
-  }, [filters, router])
+  }, [filters, selectedSchool, router])
 
   const handleSelectSchool = useCallback((school: School) => {
     setSelectedSchool(school)

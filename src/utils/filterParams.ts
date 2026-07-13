@@ -81,3 +81,15 @@ export function parseFilters(params: URLSearchParams): FilterState {
     proximity,
   }
 }
+
+// A separate top-level param rather than part of FilterState — selection isn't a filter. Written
+// as a comma-separated list (like types/levels/stars) so a future multi-school comparison mode
+// can reuse the same URL contract without a rename; today exactly one id is ever selected.
+export function serializeSchoolIds(ids: string[]): string | null {
+  return ids.length ? ids.join(',') : null
+}
+
+export function parseSchoolIds(params: URLSearchParams): string[] {
+  const raw = params.get('ids')
+  return raw ? raw.split(',').filter(Boolean) : []
+}
