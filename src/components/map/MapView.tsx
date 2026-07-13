@@ -12,6 +12,7 @@ const MapInner = dynamic(() => import('./MapInner'), {
 
 interface MapViewProps {
   filters: FilterState
+  allSchools: School[]
   selectedSchool?: School | null
   isVisible?: boolean
   onSelectSchool?: (school: School) => void
@@ -21,11 +22,12 @@ interface MapViewProps {
   canAddCompare?: boolean
 }
 
-export default function MapView({ filters, selectedSchool, isVisible, onSelectSchool, onCountyFilter, compareIds, onToggleCompare, canAddCompare }: MapViewProps) {
+export default function MapView({ filters, allSchools, selectedSchool, isVisible, onSelectSchool, onCountyFilter, compareIds, onToggleCompare, canAddCompare }: MapViewProps) {
   return (
     <div className="w-full h-full">
       <MapInner
         filters={filters}
+        allSchools={allSchools}
         selectedSchool={selectedSchool}
         isVisible={isVisible}
         onSelectSchool={onSelectSchool}

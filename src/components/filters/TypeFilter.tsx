@@ -25,13 +25,16 @@ export default function TypeFilter({ value, onChange }: TypeFilterProps) {
           <button
             key={type}
             onClick={() => toggle(type)}
-            className={`px-2.5 py-0.5 rounded text-xs font-bold border transition-colors ${
+            className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-xs font-bold border transition-colors ${
               active
                 ? 'bg-blue-600 text-white border-blue-600'
                 : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
             }`}
           >
             {type}
+            <span aria-hidden="true" className="inline-block w-2.5 text-center opacity-70">
+              {active ? '×' : '+'}
+            </span>
           </button>
         )
       })}

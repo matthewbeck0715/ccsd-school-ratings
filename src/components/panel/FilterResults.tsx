@@ -150,9 +150,14 @@ function ProximityPanel({
           />
         ) : (
           <>
-            <p className="text-xs text-gray-500 font-medium mb-2">
-              {zonedSchools.length} {zonedSchools.length === 1 ? 'school' : 'schools'} matched
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-gray-500 font-medium">
+                {zonedSchools.length} {zonedSchools.length === 1 ? 'school' : 'schools'} matched
+              </p>
+              <div className="invisible">
+                <SortBar sortKey={sortKey} sortAsc={sortAsc} options={BASE_OPTIONS} onSortKeyChange={() => {}} onSortAscChange={() => {}} />
+              </div>
+            </div>
             <div className={CARD_GRID_CLASS}>
               {zonedSchools.map((s) => (
                 <SchoolCard

@@ -98,14 +98,14 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
             <button
               onClick={() => onToggleCompare(school)}
               disabled={!isComparing && !canAddCompare}
-              className={`mt-2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent ${
+              className={`mt-2 inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent ${
                 isComparing
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'border-blue-200 text-blue-600 hover:bg-blue-50'
               }`}
             >
-              <span className="w-2.5 text-center">{isComparing ? '✓' : '+'}</span>
               Compare
+              <span className="w-2.5 text-center">{isComparing ? '×' : '+'}</span>
             </button>
           )}
         </div>
