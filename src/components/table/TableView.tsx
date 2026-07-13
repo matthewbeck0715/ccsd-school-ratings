@@ -10,6 +10,9 @@ type SortKey = 'name' | 'level' | 'type' | 'starRating' | 'indexScore' | 'elaPro
 interface TableViewProps {
   filters: FilterState
   onSelectSchool?: (school: School) => void
+  compareIds?: Set<string>
+  onToggleCompare?: (school: School) => void
+  canAddCompare?: boolean
 }
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 0] as const // 0 = all
@@ -32,7 +35,7 @@ function fmtPct(val: number | string | null | undefined, suffix = '%') {
   return <DecimalValue val={Number(val)} suffix={suffix} />
 }
 
-export default function TableView({ filters, onSelectSchool }: TableViewProps) {
+export default function TableView({ filters, onSelectSchool, compareIds, onToggleCompare, canAddCompare = true }: TableViewProps) {
   const { schools, loading, error } = useSchools(filters)
   const [sortKey, setSortKey] = useState<SortKey>('indexScore')
   const [sortAsc, setSortAsc] = useState(false)
@@ -40,7 +43,7 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
   const [pageSize, setPageSize] = useState<number>(25)
 
   const hasProximity = filters.proximity !== null
-  const colCount = hasProximity ? 10 : 9
+  const colCount = (hasProximity ? 10 : 9) + (onToggleCompare ? 1 : 0)
 
   // Auto-sort by distance when proximity activates
   useEffect(() => {
@@ -102,6 +105,9 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
               <th className={colClass + ' sticky left-0 z-20 bg-gray-50 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]'} onClick={() => handleSort('name')}>
                 School{indicator('name')}
               </th>
+              {onToggleCompare && (
+                <th className={colClass + ' w-0 cursor-default'}>Compare</th>
+              )}
               {hasProximity && (
                 <th className={colClass + ' w-0 text-right'} onClick={() => handleSort('distanceMiles')}>
                   Distance{indicator('distanceMiles')}
@@ -145,6 +151,18 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
                       </button>
                     ) : <span className="whitespace-nowrap">{school.name}</span>}
                   </td>
+                  {onToggleCompare && (
+                    <td className="px-4 py-2 w-0">
+                      <input
+                        type="checkbox"
+                        checked={!!compareIds?.has(school.id)}
+                        disabled={!canAddCompare && !compareIds?.has(school.id)}
+                        onChange={() => onToggleCompare(school)}
+                        aria-label={`Compare ${school.name}`}
+                        className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                  )}
                   {hasProximity && (
                     <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-right">
                       {school.distanceMiles != null

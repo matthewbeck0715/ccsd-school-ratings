@@ -15,6 +15,9 @@ interface SchoolCardProps {
   school: School
   distanceMiles?: number | null
   onSelect: (school: School) => void
+  isComparing?: boolean
+  onToggleCompare?: (school: School) => void
+  compareDisabled?: boolean
 }
 
 function pct(val: number | string | null | undefined): string {
@@ -25,7 +28,7 @@ function pctile(val: number | null | undefined): string {
   return val != null ? formatPercentile(val) : '—'
 }
 
-export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCardProps) {
+export default function SchoolCard({ school, distanceMiles, onSelect, isComparing, onToggleCompare, compareDisabled }: SchoolCardProps) {
   return (
     <button
       onClick={() => onSelect(school)}
@@ -49,8 +52,8 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
       </div>
 
       {/* Details + metrics */}
-      <div className="flex gap-4 items-start">
-        <div className="flex-1 min-w-0">
+      <div className="flex gap-4 items-stretch">
+        <div className="flex-1 min-w-0 flex flex-col">
           <p className="text-xs text-gray-500">{school.level} · {school.type}</p>
           {school.address && school.city && (
             <a
@@ -68,6 +71,24 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
               <span className="block">{school.address}</span>
               <span className="block">{school.city}, NV{school.zip ? ` ${school.zip}` : ''}</span>
             </a>
+          )}
+          {onToggleCompare && (
+            <label
+              className={`mt-auto pt-1.5 inline-flex items-center gap-1.5 text-xs ${compareDisabled && !isComparing ? 'text-gray-300' : 'text-gray-500'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                checked={!!isComparing}
+                disabled={compareDisabled && !isComparing}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onToggleCompare(school)
+                }}
+                className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              Compare
+            </label>
           )}
         </div>
         <div className={METRIC_GRID_CLASS}>

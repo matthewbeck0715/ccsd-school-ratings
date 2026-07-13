@@ -16,6 +16,9 @@ interface CountyClusterMarkersProps {
   onCountyFilter?: (county: string) => void
   // The selected school's popup is only open while the map is the view on screen — see SchoolMarker.
   isMapVisible?: boolean
+  compareIds?: Set<string>
+  onToggleCompare?: (school: School) => void
+  canAddCompare?: boolean
 }
 
 export default function CountyClusterMarkers({
@@ -25,6 +28,9 @@ export default function CountyClusterMarkers({
   forceIndividual,
   onCountyFilter,
   isMapVisible = true,
+  compareIds,
+  onToggleCompare,
+  canAddCompare = true,
 }: CountyClusterMarkersProps) {
   const map = useMapEvents({
     zoomend: () => setZoom(map.getZoom()),
@@ -64,6 +70,9 @@ export default function CountyClusterMarkers({
             isSelected={selectedSchool?.id === school.id}
             onSelect={onSelectSchool}
             isMapVisible={isMapVisible}
+            isComparing={compareIds?.has(school.id)}
+            onToggleCompare={onToggleCompare}
+            canAddCompare={canAddCompare}
           />
         ))}
       </>

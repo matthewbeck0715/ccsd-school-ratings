@@ -70,9 +70,22 @@ interface FilterResultsProps {
   onClearSelection: () => void
   onZoneResult: (ids: string[]) => void
   onZoneFallback: () => void
+  compareIds: Set<string>
+  onToggleCompare: (school: School) => void
+  canAddCompare: boolean
 }
 
-function ProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelection, onZoneResult, onZoneFallback }: FilterResultsProps) {
+function ProximityPanel({
+  filters,
+  selectedSchool,
+  onSelectSchool,
+  onClearSelection,
+  onZoneResult,
+  onZoneFallback,
+  compareIds,
+  onToggleCompare,
+  canAddCompare,
+}: FilterResultsProps) {
   const proximity = filters.proximity!
   const isZone = proximity.radiusMiles === 0
 
@@ -138,6 +151,9 @@ function ProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelect
                   school={s}
                   distanceMiles={s.lat != null && s.lng != null ? haversineDistanceMiles(proximity.lat, proximity.lng, s.lat, s.lng) : null}
                   onSelect={onSelectSchool}
+                  isComparing={compareIds.has(s.id)}
+                  onToggleCompare={onToggleCompare}
+                  compareDisabled={!canAddCompare}
                 />
               ))}
             </div>
@@ -167,7 +183,15 @@ function ProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelect
           </div>
           <div className="flex flex-col gap-3">
             {sortedNearby.map((school) => (
-              <SchoolCard key={school.id} school={school} distanceMiles={school.distanceMiles} onSelect={onSelectSchool} />
+              <SchoolCard
+                key={school.id}
+                school={school}
+                distanceMiles={school.distanceMiles}
+                onSelect={onSelectSchool}
+                isComparing={compareIds.has(school.id)}
+                onToggleCompare={onToggleCompare}
+                compareDisabled={!canAddCompare}
+              />
             ))}
           </div>
         </>
@@ -176,7 +200,15 @@ function ProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelect
   )
 }
 
-function NonProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelection }: Pick<FilterResultsProps, 'filters' | 'selectedSchool' | 'onSelectSchool' | 'onClearSelection'>) {
+function NonProximityPanel({
+  filters,
+  selectedSchool,
+  onSelectSchool,
+  onClearSelection,
+  compareIds,
+  onToggleCompare,
+  canAddCompare,
+}: Pick<FilterResultsProps, 'filters' | 'selectedSchool' | 'onSelectSchool' | 'onClearSelection' | 'compareIds' | 'onToggleCompare' | 'canAddCompare'>) {
   const { schools, loading } = useSchools(filters)
 
   const [sortKey, setSortKey] = useState<SortKey>('indexScore')
@@ -207,7 +239,14 @@ function NonProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSel
           </div>
           <div className="flex flex-col gap-3">
             {sorted.map((school) => (
-              <SchoolCard key={school.id} school={school} onSelect={onSelectSchool} />
+              <SchoolCard
+                key={school.id}
+                school={school}
+                onSelect={onSelectSchool}
+                isComparing={compareIds.has(school.id)}
+                onToggleCompare={onToggleCompare}
+                compareDisabled={!canAddCompare}
+              />
             ))}
           </div>
         </>
@@ -217,17 +256,8 @@ function NonProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSel
 }
 
 export default function FilterResults(props: FilterResultsProps) {
-  const { filters, selectedSchool, onSelectSchool, onClearSelection } = props
-
-  if (filters.proximity) {
+  if (props.filters.proximity) {
     return <ProximityPanel {...props} />
   }
-  return (
-    <NonProximityPanel
-      filters={filters}
-      selectedSchool={selectedSchool}
-      onSelectSchool={onSelectSchool}
-      onClearSelection={onClearSelection}
-    />
-  )
+  return <NonProximityPanel {...props} />
 }
