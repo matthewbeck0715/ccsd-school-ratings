@@ -75,6 +75,15 @@ interface FilterResultsProps {
   canAddCompare: boolean
 }
 
+// Cards go up to 3 columns once the panel itself (not the viewport) is wide enough — a
+// container query rather than a media query, since the same component renders both in the
+// map's narrow 1/3-width side panel and in the list tab's full-width picker. The column gap
+// (gap-x-8) is set to exactly 2x the wrapper's side padding (px-4) so a 3-column card in the
+// list tab lands at the same width as a 1-column card in the map's side panel — with N=3
+// columns, the padding shared across all cards plus the 2 internal gaps works out to the same
+// per-card width as the single column's full padding being spent on just one card.
+const CARD_GRID_CLASS = 'grid grid-cols-1 @xl:grid-cols-2 @6xl:grid-cols-3 gap-x-8 gap-y-3'
+
 function ProximityPanel({
   filters,
   selectedSchool,
@@ -132,7 +141,7 @@ function ProximityPanel({
     if (!zoneResult || (!zoneResult.Elementary && !zoneResult.Middle && !zoneResult.High)) return null
     const zonedSchools = [zoneResult.Elementary, zoneResult.Middle, zoneResult.High].filter(Boolean) as School[]
     return (
-      <div className="bg-white px-4 py-3 h-full">
+      <div className="bg-white px-4 py-3 h-full @container">
         {selectedSchool ? (
           <SchoolComparison
             school={selectedSchool}
@@ -144,7 +153,7 @@ function ProximityPanel({
             <p className="text-xs text-gray-500 font-medium mb-2">
               {zonedSchools.length} {zonedSchools.length === 1 ? 'school' : 'schools'} matched
             </p>
-            <div className="flex flex-col gap-3">
+            <div className={CARD_GRID_CLASS}>
               {zonedSchools.map((s) => (
                 <SchoolCard
                   key={s.id}
@@ -166,7 +175,7 @@ function ProximityPanel({
   const radiusOptions = [...BASE_OPTIONS, DISTANCE_OPTION]
 
   return (
-    <div className="bg-white px-4 py-3 h-full">
+    <div className="bg-white px-4 py-3 h-full @container">
       {selectedSchool ? (
         <SchoolComparison
           school={selectedSchool}
@@ -181,7 +190,7 @@ function ProximityPanel({
             </p>
             <SortBar sortKey={sortKey} sortAsc={sortAsc} options={radiusOptions} onSortKeyChange={setSortKey} onSortAscChange={setSortAsc} />
           </div>
-          <div className="flex flex-col gap-3">
+          <div className={CARD_GRID_CLASS}>
             {sortedNearby.map((school) => (
               <SchoolCard
                 key={school.id}
@@ -226,7 +235,7 @@ function NonProximityPanel({
   )
 
   return (
-    <div className="bg-white px-4 py-3 h-full">
+    <div className="bg-white px-4 py-3 h-full @container">
       {selectedSchool ? (
         <SchoolComparison school={selectedSchool} onClear={onClearSelection} />
       ) : (
@@ -237,7 +246,7 @@ function NonProximityPanel({
             </p>
             <SortBar sortKey={sortKey} sortAsc={sortAsc} options={BASE_OPTIONS} onSortKeyChange={setSortKey} onSortAscChange={setSortAsc} />
           </div>
-          <div className="flex flex-col gap-3">
+          <div className={CARD_GRID_CLASS}>
             {sorted.map((school) => (
               <SchoolCard
                 key={school.id}
