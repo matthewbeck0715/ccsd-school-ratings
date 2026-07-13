@@ -73,14 +73,22 @@ export default function AboutPage() {
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Growth Metrics</h3>
           <p className="text-gray-700 leading-relaxed">
-            ELA Growth and Math Growth come from the Nevada Growth Model, which measures
-            year-over-year student progress by comparing each student to academic peers statewide —
-            students who had similar prior test scores.
+            Growth - AGP and Growth - MGP are both measures of student progress over time, rather
+            than a snapshot of proficiency — but they come from different sources and are
+            calculated differently.
           </p>
           <p className="text-gray-700 leading-relaxed mt-3">
-            Each figure is the percentage of students at the school who met their individual growth
-            target for the year — the amount of progress needed to reach or stay proficient. A
-            higher percentage means more students are on track.
+            <strong>Growth - AGP</strong> is the percentage of students at the school who met their
+            individual growth target for the year — the amount of progress needed to reach or stay
+            proficient. A higher percentage means more students are on track.
+          </p>
+          <p className="text-gray-700 leading-relaxed mt-3">
+            <strong>Growth - MGP</strong> (Median Growth Percentile) comes from the Nevada Growth
+            Model, which compares each student&apos;s year-over-year progress to academic peers
+            statewide — students who had similar prior test scores. A school&apos;s MGP is the
+            median of its students&apos; individual growth percentiles; 50 represents typical
+            growth for the state. MGP is only reported for grades 3–8, so it does not appear for
+            high schools.
           </p>
         </section>
 
@@ -101,7 +109,7 @@ export default function AboutPage() {
             https://nevadareportcard.nv.gov/di/
           </a>
           <p className="text-gray-700 leading-relaxed mt-3">
-            Growth percentiles come from the Nevada Growth Model:
+            Growth - MGP percentiles come from the Nevada Growth Model:
           </p>
           <a
             href="https://ngma.bighorn.doe.nv.gov/nvgrowthmodel"

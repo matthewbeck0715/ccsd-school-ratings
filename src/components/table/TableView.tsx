@@ -2,10 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useSchools } from '@/hooks/useSchools'
-import { useCountyAverages } from '@/hooks/useCountyAverages'
 import StarRatingComponent from '@/components/StarRating'
 import type { FilterState, School, SchoolWithDistance } from '@/types/school'
-import { schoolDeltaAverage, formatDelta, deltaColor } from '@/utils/countyAverages'
 
 type SortKey = 'name' | 'level' | 'type' | 'starRating' | 'indexScore' | 'elaProficient' | 'mathProficient' | 'elaGrowth' | 'mathGrowth' | 'distanceMiles'
 
@@ -36,7 +34,6 @@ function fmtPct(val: number | string | null | undefined, suffix = '%') {
 
 export default function TableView({ filters, onSelectSchool }: TableViewProps) {
   const { schools, loading, error } = useSchools(filters)
-  const countyAvgMap = useCountyAverages()
   const [sortKey, setSortKey] = useState<SortKey>('indexScore')
   const [sortAsc, setSortAsc] = useState(false)
   const [page, setPage] = useState(0)
@@ -136,11 +133,7 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
                 </td>
               </tr>
             ) : (
-              pageSlice.map((school) => {
-                const countyAvg = schoolDeltaAverage(countyAvgMap, school, filters)
-                const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
-                const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
-                return (
+              pageSlice.map((school) => (
                 <tr key={school.id} className="group hover:bg-gray-50">
                   <td className="px-4 py-2 font-medium text-gray-900 sticky left-0 z-10 bg-white group-hover:bg-gray-50 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.08)]">
                     {onSelectSchool ? (
@@ -165,17 +158,12 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
                     <StarRatingComponent rating={school.starRating} />
                   </td>
                   <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap"><DecimalValue val={school.indexScore} suffix="" /></td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">
-                    {fmtPct(school.elaProficient)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}
-                  </td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">
-                    {fmtPct(school.mathProficient)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}
-                  </td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.elaProficient)}</td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.mathProficient)}</td>
                   <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.elaGrowth)}</td>
                   <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.mathGrowth)}</td>
                 </tr>
-                )
-              })
+              ))
             )}
           </tbody>
         </table>

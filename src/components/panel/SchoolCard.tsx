@@ -2,23 +2,25 @@
 
 import type { School } from '@/types/school'
 import { getMarkerColor } from '@/utils/markerColors'
-import type { CountyLevelAverages } from '@/utils/countyAverages'
-import { formatDelta, deltaColor } from '@/utils/countyAverages'
 
-// Shared by the county-averages banner so its tiles land in the same columns as the
-// cards below it. The width is fixed rather than content-sized: each grid would
-// otherwise size to its own widest cell and the two would drift out of alignment.
-export const METRIC_GRID_CLASS = 'grid grid-cols-2 gap-x-4 gap-y-1 text-xs shrink-0 w-56'
+// Fixed width rather than content-sized, so the metric columns line up card to card
+// instead of each grid sizing to its own widest cell. Wide enough for "Math Growth - MGP",
+// the longest label, to sit on one line; gap is kept tight so the address column isn't
+// squeezed more than necessary.
+const METRIC_GRID_CLASS = 'grid grid-cols-2 gap-x-1 gap-y-1 text-xs shrink-0 w-64'
 
 interface SchoolCardProps {
   school: School
   distanceMiles?: number | null
-  countyAvg?: CountyLevelAverages | null
   onSelect: (school: School) => void
 }
 
 function pct(val: number | string | null | undefined): string {
   return val != null ? `${val}%` : '—'
+}
+
+function pctile(val: number | null | undefined): string {
+  return val != null ? String(Math.round(val)) : '—'
 }
 
 function getMapsUrl(query: string): string {
@@ -28,22 +30,27 @@ function getMapsUrl(query: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
 
-export default function SchoolCard({ school, distanceMiles, countyAvg, onSelect }: SchoolCardProps) {
-  // NDE only publishes county proficiency, so those are the only deltas we can show.
-  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
-  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
-
+export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCardProps) {
   return (
     <button
       onClick={() => onSelect(school)}
       className="rounded-lg border border-gray-200 p-3 bg-white text-left hover:border-blue-400 hover:shadow-sm transition-colors"
     >
       {/* Title row */}
-      <div className="flex items-baseline gap-2 mb-1">
-        <p className="font-semibold text-gray-900 text-sm leading-tight">{school.name}</p>
+      <div className="flex items-center gap-2 mb-1">
+        <p className="font-semibold text-gray-900 text-sm leading-tight truncate min-w-0">{school.name}</p>
+        <span className="shrink-0 text-xs font-medium" style={{ color: getMarkerColor(school.starRating) }}>
+          {school.starRating !== null ? '★'.repeat(school.starRating) : 'NR'}
+        </span>
         {distanceMiles != null && (
           <span className="text-xs text-gray-400 shrink-0">{distanceMiles.toFixed(1)} mi</span>
         )}
+        <span
+          className="ml-auto shrink-0 text-sm font-bold"
+          style={{ color: getMarkerColor(school.starRating) }}
+        >
+          {Math.trunc(school.indexScore)}
+        </span>
       </div>
 
       {/* Details + metrics */}
@@ -70,28 +77,28 @@ export default function SchoolCard({ school, distanceMiles, countyAvg, onSelect 
         </div>
         <div className={METRIC_GRID_CLASS}>
           <div>
-            <div className="text-gray-400">Stars</div>
-            <div className="font-medium" style={{ color: getMarkerColor(school.starRating) }}>{school.starRating !== null ? '★'.repeat(school.starRating) : 'NR'}</div>
-          </div>
-          <div>
-            <div className="text-gray-400">Score</div>
-            <div className="font-medium">{school.indexScore}</div>
-          </div>
-          <div>
             <div className="text-gray-400">ELA Proficient</div>
-            <div className="font-medium">{pct(school.elaProficient)}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
+            <div className="font-medium">{pct(school.elaProficient)}</div>
           </div>
           <div>
             <div className="text-gray-400">Math Proficient</div>
-            <div className="font-medium">{pct(school.mathProficient)}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
+            <div className="font-medium">{pct(school.mathProficient)}</div>
           </div>
           <div>
-            <div className="text-gray-400">ELA Growth</div>
+            <div className="text-gray-400">ELA Growth - AGP</div>
             <div className="font-medium">{pct(school.elaGrowth)}</div>
           </div>
           <div>
-            <div className="text-gray-400">Math Growth</div>
+            <div className="text-gray-400">Math Growth - AGP</div>
             <div className="font-medium">{pct(school.mathGrowth)}</div>
+          </div>
+          <div>
+            <div className="text-gray-400">ELA Growth - MGP</div>
+            <div className="font-medium">{pctile(school.elaMgp)}</div>
+          </div>
+          <div>
+            <div className="text-gray-400">Math Growth - MGP</div>
+            <div className="font-medium">{pctile(school.mathMgp)}</div>
           </div>
         </div>
       </div>
