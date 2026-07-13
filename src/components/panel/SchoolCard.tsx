@@ -3,12 +3,13 @@
 import type { School } from '@/types/school'
 import { getMarkerColor } from '@/utils/markerColors'
 import { formatPercentile } from '@/utils/format'
+import { getMapsUrl } from '@/utils/maps'
 
 // Fixed width rather than content-sized, so the metric columns line up card to card
-// instead of each grid sizing to its own widest cell. Wide enough for "Math Growth - MGP",
-// the longest label, to sit on one line; gap is kept tight so the address column isn't
-// squeezed more than necessary.
-const METRIC_GRID_CLASS = 'grid grid-cols-2 gap-x-1 gap-y-1 text-xs shrink-0 w-64'
+// instead of each grid sizing to its own widest cell. Narrower than the longest label
+// ("Math Proficiency"), which wraps to two lines here — traded for a smaller footprint;
+// gap is kept tight so the address column isn't squeezed more than necessary.
+const METRIC_GRID_CLASS = 'grid grid-cols-2 gap-x-0.5 gap-y-1 text-xs shrink-0 w-52'
 
 interface SchoolCardProps {
   school: School
@@ -22,13 +23,6 @@ function pct(val: number | string | null | undefined): string {
 
 function pctile(val: number | null | undefined): string {
   return val != null ? formatPercentile(val) : '—'
-}
-
-function getMapsUrl(query: string): string {
-  if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-    return `maps://?q=${encodeURIComponent(query)}`
-  }
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
 
 export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCardProps) {
@@ -86,19 +80,19 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
             <div className="font-medium">{pct(school.mathProficiency)}</div>
           </div>
           <div>
-            <div className="text-gray-400">ELA Growth - AGP</div>
+            <div className="text-gray-400">ELA % Met AGP</div>
             <div className="font-medium">{pct(school.elaGrowth)}</div>
           </div>
           <div>
-            <div className="text-gray-400">Math Growth - AGP</div>
+            <div className="text-gray-400">Math % Met AGP</div>
             <div className="font-medium">{pct(school.mathGrowth)}</div>
           </div>
           <div>
-            <div className="text-gray-400">ELA Growth - MGP</div>
+            <div className="text-gray-400">ELA MGP</div>
             <div className="font-medium">{pctile(school.elaMgp)}</div>
           </div>
           <div>
-            <div className="text-gray-400">Math Growth - MGP</div>
+            <div className="text-gray-400">Math MGP</div>
             <div className="font-medium">{pctile(school.mathMgp)}</div>
           </div>
         </div>
