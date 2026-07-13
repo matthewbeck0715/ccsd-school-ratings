@@ -274,7 +274,7 @@ export default function SchoolComparison({ school, distanceMiles, onClear }: {
             className="ml-auto shrink-0 text-sm font-bold"
             style={{ color: getMarkerColor(school.starRating) }}
           >
-            {Math.trunc(school.indexScore)}
+            {school.indexScore.toFixed(1)}
           </span>
         </div>
         <p className="text-xs text-gray-500">{school.level} · {school.type}</p>

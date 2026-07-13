@@ -18,8 +18,8 @@ export default function CompareTray({
   const canView = schools.length >= 2
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-blue-50 px-4 py-2">
-      <span className="shrink-0 text-xs font-semibold text-gray-600">
+    <div className="flex flex-wrap items-center gap-0 border-b border-gray-200 bg-blue-50 px-4 py-2">
+      <span className="w-36 shrink-0 text-xs font-semibold text-gray-600">
         Comparing {schools.length} {schools.length === 1 ? 'school' : 'schools'}:
       </span>
       <div className="flex flex-wrap items-center gap-1.5">

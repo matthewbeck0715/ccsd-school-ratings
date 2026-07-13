@@ -30,9 +30,16 @@ function pctile(val: number | null | undefined): string {
 
 export default function SchoolCard({ school, distanceMiles, onSelect, isComparing, onToggleCompare, compareDisabled }: SchoolCardProps) {
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(school)}
-      className="rounded-lg border border-gray-200 p-3 bg-white text-left hover:border-blue-400 hover:shadow-sm transition-colors"
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return
+        e.preventDefault()
+        onSelect(school)
+      }}
+      className="cursor-pointer rounded-lg border border-gray-200 p-3 bg-white text-left hover:border-blue-400 hover:shadow-sm transition-colors"
     >
       {/* Title row */}
       <div className="flex items-center gap-2 mb-1">
@@ -47,7 +54,7 @@ export default function SchoolCard({ school, distanceMiles, onSelect, isComparin
           className="ml-auto shrink-0 text-sm font-bold"
           style={{ color: getMarkerColor(school.starRating) }}
         >
-          {Math.trunc(school.indexScore)}
+          {school.indexScore.toFixed(1)}
         </span>
       </div>
 
@@ -73,22 +80,21 @@ export default function SchoolCard({ school, distanceMiles, onSelect, isComparin
             </a>
           )}
           {onToggleCompare && (
-            <label
-              className={`mt-auto pt-1.5 inline-flex items-center gap-1.5 text-xs ${compareDisabled && !isComparing ? 'text-gray-300' : 'text-gray-500'}`}
-              onClick={(e) => e.stopPropagation()}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleCompare(school)
+              }}
+              disabled={compareDisabled && !isComparing}
+              className={`mt-auto self-start inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent ${
+                isComparing
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-blue-200 text-blue-600 hover:bg-blue-50'
+              }`}
             >
-              <input
-                type="checkbox"
-                checked={!!isComparing}
-                disabled={compareDisabled && !isComparing}
-                onChange={(e) => {
-                  e.stopPropagation()
-                  onToggleCompare(school)
-                }}
-                className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+              <span className="w-2.5 text-center">{isComparing ? '✓' : '+'}</span>
               Compare
-            </label>
+            </button>
           )}
         </div>
         <div className={METRIC_GRID_CLASS}>
@@ -118,6 +124,6 @@ export default function SchoolCard({ school, distanceMiles, onSelect, isComparin
           </div>
         </div>
       </div>
-    </button>
+    </div>
   )
 }
