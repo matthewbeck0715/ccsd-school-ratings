@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import type L from 'leaflet'
 import { createMarkerIcon, getMarkerColor } from '@/utils/markerColors'
+import { formatPercentile } from '@/utils/format'
 import type { SchoolWithDistance } from '@/types/school'
 
 interface SchoolMarkerProps {
@@ -66,12 +67,12 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
           )}
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs mt-0">
             <div>
-              <div className="text-gray-400">ELA Proficient</div>
-              <div className="font-medium">{school.elaProficient != null ? `${school.elaProficient}%` : '—'}</div>
+              <div className="text-gray-400">ELA Proficiency</div>
+              <div className="font-medium">{school.elaProficiency != null ? `${school.elaProficiency}%` : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">Math Proficient</div>
-              <div className="font-medium">{school.mathProficient != null ? `${school.mathProficient}%` : '—'}</div>
+              <div className="text-gray-400">Math Proficiency</div>
+              <div className="font-medium">{school.mathProficiency != null ? `${school.mathProficiency}%` : '—'}</div>
             </div>
             <div>
               <div className="text-gray-400">ELA Growth - AGP</div>
@@ -83,11 +84,11 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
             </div>
             <div>
               <div className="text-gray-400">ELA Growth - MGP</div>
-              <div className="font-medium">{school.elaMgp != null ? Math.round(school.elaMgp) : '—'}</div>
+              <div className="font-medium">{school.elaMgp != null ? formatPercentile(school.elaMgp) : '—'}</div>
             </div>
             <div>
               <div className="text-gray-400">Math Growth - MGP</div>
-              <div className="font-medium">{school.mathMgp != null ? Math.round(school.mathMgp) : '—'}</div>
+              <div className="font-medium">{school.mathMgp != null ? formatPercentile(school.mathMgp) : '—'}</div>
             </div>
           </div>
         </div>
