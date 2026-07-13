@@ -18,9 +18,11 @@ export default function CompareTray({
   const canView = schools.length >= 2
 
   return (
-    <div className="flex flex-wrap items-center gap-0 border-b border-gray-200 bg-blue-50 px-4 py-2">
-      <span className="w-36 shrink-0 text-xs font-semibold text-gray-600">
-        Comparing {schools.length} {schools.length === 1 ? 'school' : 'schools'}:
+    // Below xl the label, chips, and view/clear buttons are each their own row instead of
+    // fighting for the same line; at xl they rejoin into the original single wrapping row.
+    <div className="flex flex-col gap-2 border-b border-gray-200 bg-blue-50 px-4 py-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-0">
+      <span className="shrink-0 text-xs font-semibold text-gray-600 xl:w-36">
+        Comparing {schools.length} {schools.length === 1 ? 'school' : 'schools'}
       </span>
       <div className="flex flex-wrap items-center gap-1.5">
         {schools.map((school) => (
@@ -39,7 +41,7 @@ export default function CompareTray({
           </span>
         ))}
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3 xl:ml-auto">
         {!canView && (
           <span className="text-xs text-gray-400">Pick at least 1 more to compare</span>
         )}
