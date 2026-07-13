@@ -93,20 +93,39 @@ function Bar({ rowLabel, value, unit, color, title }: {
   color: string
   title: string
 }) {
+  // Below this, the fill is too narrow to hold its own label, so it falls back to dark text
+  // just outside the bar — safe to leave uncapped here since a small fill always leaves plenty
+  // of room to its right, unlike the near-100% case that motivated capping it in the first place.
+  // Percentile text ("40th percentile") is wider than percent text ("20.0%"), so it needs a
+  // higher cutoff before the inside-the-bar treatment has room to work.
+  const smallCutoff = unit === 'percentile' ? 25 : 15
+  const isSmall = value < smallCutoff
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-0">
       <span className="w-20 shrink-0 truncate text-[11px] text-gray-500" title={rowLabel}>{rowLabel}</span>
-      <div className="relative h-2.5 flex-1 rounded-sm bg-gray-100">
-        <div className={`absolute inset-y-0 left-0 rounded-r ${color}`} style={{ width: pos(value) }} title={title} />
-        {/* Sits right after the fill's edge, on the bar's own line. min() caps how far right
-            it can start so there's always room for the longest label ("100th percentile")
-            before the track's right edge, rather than running off it. */}
-        <span
-          className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap pl-1.5 text-[11px] font-semibold text-gray-900 tabular-nums"
-          style={{ left: `min(${pos(value)}, calc(100% - 7rem))` }}
-        >
-          {fmt(value, unit)}
-        </span>
+      <div className="relative h-5 flex-1 rounded-sm bg-gray-100">
+        {isSmall ? (
+          <>
+            <div className={`absolute inset-y-0 left-0 rounded-r ${color}`} style={{ width: pos(value) }} title={title} />
+            <span
+              className="absolute top-1/2 -translate-y-1/2 whitespace-nowrap pl-1.5 text-[11px] font-semibold text-gray-900 tabular-nums"
+              style={{ left: pos(value) }}
+            >
+              {fmt(value, unit)}
+            </span>
+          </>
+        ) : (
+          <div
+            className={`absolute inset-y-0 left-0 flex items-center justify-end overflow-visible rounded-r px-1.5 ${color}`}
+            style={{ width: pos(value) }}
+            title={title}
+          >
+            <span className="whitespace-nowrap text-[11px] font-semibold text-white tabular-nums">
+              {fmt(value, unit)}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -149,10 +168,10 @@ function MetricBar({ label, value, county = null, state = null, countyName = nul
       <div className="mt-1.5 flex flex-col gap-1.5">
         <Bar rowLabel="This school" value={value} unit={unit} color="bg-blue-600" title={`This school: ${fmt(value, unit)}`} />
         {county !== null && (
-          <Bar rowLabel={countyName ?? 'County'} value={county} unit={unit} color="bg-gray-500" title={`${countyName}: ${fmt(county, unit)}`} />
+          <Bar rowLabel={countyName ?? 'County'} value={county} unit={unit} color="bg-gray-600" title={`${countyName}: ${fmt(county, unit)}`} />
         )}
         {state !== null && (
-          <Bar rowLabel="Nevada" value={state} unit={unit} color="bg-gray-300" title={`Nevada: ${fmt(state, unit)}`} />
+          <Bar rowLabel="Nevada" value={state} unit={unit} color="bg-gray-500" title={`Nevada: ${fmt(state, unit)}`} />
         )}
       </div>
 
@@ -255,7 +274,7 @@ export default function SchoolComparison({ school, distanceMiles, onClear }: {
             className="ml-auto shrink-0 text-sm font-bold"
             style={{ color: getMarkerColor(school.starRating) }}
           >
-            {Math.trunc(school.indexScore)}
+            {school.indexScore.toFixed(1)}
           </span>
         </div>
         <p className="text-xs text-gray-500">{school.level} · {school.type}</p>

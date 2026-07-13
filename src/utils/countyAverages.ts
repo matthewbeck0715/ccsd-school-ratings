@@ -19,10 +19,8 @@ export function countyLevelKey(county: string, level: SchoolLevel): string {
   return `${county}:${level}`
 }
 
-// Carson City is an independent city, not a county — "Carson City County" would be wrong.
 export function scopeLabel(scope: string): string {
-  if (scope === STATE_SCOPE) return 'Nevada statewide'
-  return scope === 'Carson City' ? scope : `${scope} County`
+  return scope === STATE_SCOPE ? 'Nevada statewide' : scope
 }
 
 // Both scopes a school is charted against. Deliberately independent of the filters: the
