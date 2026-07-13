@@ -121,7 +121,11 @@ function ProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelect
     return (
       <div className="bg-white px-4 py-3 h-full">
         {selectedSchool ? (
-          <SchoolComparison school={selectedSchool} onClear={onClearSelection} />
+          <SchoolComparison
+            school={selectedSchool}
+            distanceMiles={selectedSchool.lat != null && selectedSchool.lng != null ? haversineDistanceMiles(proximity.lat, proximity.lng, selectedSchool.lat, selectedSchool.lng) : null}
+            onClear={onClearSelection}
+          />
         ) : (
           <>
             <p className="text-xs text-gray-500 font-medium mb-2">
@@ -148,7 +152,11 @@ function ProximityPanel({ filters, selectedSchool, onSelectSchool, onClearSelect
   return (
     <div className="bg-white px-4 py-3 h-full">
       {selectedSchool ? (
-        <SchoolComparison school={selectedSchool} onClear={onClearSelection} />
+        <SchoolComparison
+          school={selectedSchool}
+          distanceMiles={selectedSchool.lat != null && selectedSchool.lng != null ? haversineDistanceMiles(proximity.lat, proximity.lng, selectedSchool.lat, selectedSchool.lng) : null}
+          onClear={onClearSelection}
+        />
       ) : (
         <>
           <div className="flex items-center justify-between mb-2">

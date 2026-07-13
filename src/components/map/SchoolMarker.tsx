@@ -37,7 +37,7 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
   return (
     <Marker ref={markerRef} position={[school.lat, school.lng]} icon={icon} eventHandlers={{ click: () => onSelect?.(school) }}>
       <Popup>
-        <div className="min-w-[280px]">
+        <div className="min-w-[220px]">
           <div className="flex items-center gap-2 mb-1">
             <p className="font-semibold text-sm truncate min-w-0">{school.name}</p>
             <span className="shrink-0 text-xs font-medium" style={{ color: getMarkerColor(school.starRating) }}>
@@ -65,7 +65,7 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
               <span className="block">{school.city}, NV{school.zip ? ` ${school.zip}` : ''}</span>
             </a>
           )}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs mt-0">
+          <div className="grid grid-cols-2 gap-x-0.5 gap-y-1 text-xs mt-0">
             <div>
               <div className="text-gray-400">ELA Proficiency</div>
               <div className="font-medium">{school.elaProficiency != null ? `${school.elaProficiency}%` : '—'}</div>
@@ -75,19 +75,19 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
               <div className="font-medium">{school.mathProficiency != null ? `${school.mathProficiency}%` : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">ELA Growth - AGP</div>
+              <div className="text-gray-400">ELA % Met AGP</div>
               <div className="font-medium">{school.elaGrowth != null ? `${school.elaGrowth}%` : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">Math Growth - AGP</div>
+              <div className="text-gray-400">Math % Met AGP</div>
               <div className="font-medium">{school.mathGrowth != null ? `${school.mathGrowth}%` : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">ELA Growth - MGP</div>
+              <div className="text-gray-400">ELA MGP</div>
               <div className="font-medium">{school.elaMgp != null ? formatPercentile(school.elaMgp) : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">Math Growth - MGP</div>
+              <div className="text-gray-400">Math MGP</div>
               <div className="font-medium">{school.mathMgp != null ? formatPercentile(school.mathMgp) : '—'}</div>
             </div>
           </div>

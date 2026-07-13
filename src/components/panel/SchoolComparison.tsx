@@ -8,6 +8,7 @@ import { getMarkerColor } from '@/utils/markerColors'
 import { useCountyAverages } from '@/hooks/useCountyAverages'
 import { countyAndStateAverages, formatDelta, deltaColor, scopeLabel } from '@/utils/countyAverages'
 import { formatPercentile } from '@/utils/format'
+import { getMapsUrl } from '@/utils/maps'
 
 // The school is the subject: it gets the bar. The county and state are context, drawn as
 // reference marks on the same 0–100% scale. They use different shapes rather than just
@@ -217,8 +218,9 @@ function Section({ title, children }: {
   )
 }
 
-export default function SchoolComparison({ school, onClear }: {
+export default function SchoolComparison({ school, distanceMiles, onClear }: {
   school: School
+  distanceMiles?: number | null
   onClear: () => void
 }) {
   const countyAvgMap = useCountyAverages()
@@ -242,6 +244,9 @@ export default function SchoolComparison({ school, onClear }: {
           <span className="shrink-0 text-xs">
             <StarRating rating={school.starRating} />
           </span>
+          {distanceMiles != null && (
+            <span className="text-xs text-gray-400 shrink-0">{distanceMiles.toFixed(1)} mi</span>
+          )}
           <span
             className="ml-auto shrink-0 text-sm font-bold"
             style={{ color: getMarkerColor(school.starRating) }}
@@ -250,6 +255,22 @@ export default function SchoolComparison({ school, onClear }: {
           </span>
         </div>
         <p className="text-xs text-gray-500">{school.level} · {school.type}</p>
+        {school.address && school.city && (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${school.name}, ${school.address}, ${school.city}, NV ${school.zip ?? ''}`.trim())}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault()
+              const query = `${school.name}, ${school.address}, ${school.city}, NV ${school.zip ?? ''}`.trim()
+              window.open(getMapsUrl(query), '_blank', 'noopener,noreferrer')
+            }}
+            className="text-xs text-blue-500 hover:underline mt-0.5 inline-block"
+          >
+            <span className="block">{school.address}</span>
+            <span className="block">{school.city}, NV{school.zip ? ` ${school.zip}` : ''}</span>
+          </a>
+        )}
       </div>
 
       <Section title="Proficiency">
@@ -282,7 +303,7 @@ export default function SchoolComparison({ school, onClear }: {
       {school.level !== 'High' && (
         <Section title="Growth">
           <MetricBar
-            label="ELA Growth - % Met AGP"
+            label="ELA % Met AGP"
             value={toNum(school.elaGrowth)}
             tooltip={{
               name: 'Adequate Growth Percentile',
@@ -290,7 +311,7 @@ export default function SchoolComparison({ school, onClear }: {
             }}
           />
           <MetricBar
-            label="ELA Growth - MGP"
+            label="ELA MGP"
             value={school.elaMgp}
             unit="percentile"
             tooltip={{
@@ -299,7 +320,7 @@ export default function SchoolComparison({ school, onClear }: {
             }}
           />
           <MetricBar
-            label="Math Growth - % Met AGP"
+            label="Math % Met AGP"
             value={toNum(school.mathGrowth)}
             tooltip={{
               name: 'Adequate Growth Percentile',
@@ -307,7 +328,7 @@ export default function SchoolComparison({ school, onClear }: {
             }}
           />
           <MetricBar
-            label="Math Growth - MGP"
+            label="Math MGP"
             value={school.mathMgp}
             unit="percentile"
             tooltip={{
