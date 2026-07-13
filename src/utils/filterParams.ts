@@ -5,6 +5,19 @@ const VALID_TYPES = new Set<string>(['District', 'Charter', 'Magnet'])
 const VALID_LEVELS = new Set<string>(['Elementary', 'Middle', 'High'])
 const VALID_STARS = new Set<number>([1, 2, 3, 4, 5])
 
+// Whether the user has narrowed the list at all. Gates the results panel, which without a
+// filter would be a card for every school in Nevada.
+export function hasActiveFilters(filters: FilterState): boolean {
+  return (
+    filters.search !== '' ||
+    filters.schoolTypes.length > 0 ||
+    filters.schoolLevels.length > 0 ||
+    filters.starRatings.length > 0 ||
+    filters.county !== null ||
+    filters.proximity !== null
+  )
+}
+
 export function serializeFilters(filters: FilterState): URLSearchParams {
   const params = new URLSearchParams()
 

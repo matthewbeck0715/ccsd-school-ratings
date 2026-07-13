@@ -16,7 +16,11 @@ import { useSchools } from '@/hooks/useSchools'
 import MapView from '@/components/map/MapView'
 import TableView from '@/components/table/TableView'
 import FilterResults from '@/components/panel/FilterResults'
-import { parseFilters, serializeFilters } from '@/utils/filterParams'
+import SchoolComparison from '@/components/panel/SchoolComparison'
+import { hasActiveFilters, parseFilters, serializeFilters } from '@/utils/filterParams'
+
+// Tailwind's xl breakpoint — the width at which the results panel appears beside the map.
+const DESKTOP_QUERY = '(min-width: 1280px)'
 
 function HomeContent() {
   const router = useRouter()
@@ -27,6 +31,13 @@ function HomeContent() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [addressError, setAddressError] = useState<string | null>(null)
   const isPopState = useRef(false)
+  const mobileListRef = useRef<HTMLDivElement>(null)
+
+  // The chart takes the banner's place at the top of the list, so a card tapped further down
+  // would swap in a chart the user can't see. Bring it back into view.
+  useEffect(() => {
+    if (selectedSchool) mobileListRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [selectedSchool])
 
   useEffect(() => {
     function handlePopState() {
@@ -52,16 +63,14 @@ function HomeContent() {
 
   const handleSelectSchool = useCallback((school: School) => {
     setSelectedSchool(school)
-    setView('map')
+    // Below xl there is no side panel next to the map, so the comparison chart lives in the
+    // list itself — jumping to the map would be jumping away from the thing just selected.
+    if (window.matchMedia(DESKTOP_QUERY).matches) setView('map')
   }, [])
 
-  const hasActive =
-    filters.search !== '' ||
-    filters.schoolTypes.length > 0 ||
-    filters.schoolLevels.length > 0 ||
-    filters.starRatings.length > 0 ||
-    filters.county !== null ||
-    filters.proximity !== null
+  const hasActive = hasActiveFilters(filters)
+
+  const clearSelection = useCallback(() => setSelectedSchool(null), [])
 
   const { schools: filteredSchools } = useSchools(filters)
 
@@ -135,8 +144,10 @@ function HomeContent() {
             >
               Map
             </button>
+            {/* The selection survives the trip, so coming back to the map lands on the same
+                school with its popup open. */}
             <button
-              onClick={() => { setView('table'); setSelectedSchool(null) }}
+              onClick={() => setView('table')}
               className={`px-2.5 py-0.5 text-xs font-bold border-l border-gray-300 transition-colors ${view === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:border-gray-400'}`}
             >
               <span className="xl:hidden">List</span>
@@ -199,12 +210,14 @@ function HomeContent() {
         </div>
       </div>
 
-      {/* Mobile filter drawer — always mounted, manages its own open/close */}
+      {/* Mobile filter drawer — always mounted, manages its own open/close.
+          Unlike the view toggle, "View Schools" drops the selection: the chart covers the
+          list, and this button is a request for the list. */}
       <FilterDrawer
         filters={filters}
         onChange={setFilters}
         onClear={clearFilters}
-        onViewSchools={() => { setView('table'); setSelectedSchool(null) }}
+        onViewSchools={() => { setView('table'); clearSelection() }}
         filterCount={filterCount}
         schoolCount={filteredSchools.length}
       />
@@ -212,14 +225,24 @@ function HomeContent() {
       {/* Main content */}
       <main className="flex-1 overflow-hidden">
         <div className={view === 'map' ? 'flex xl:flex-row h-full' : 'hidden'}>
-          {hasActive && (
+          {(hasActive || selectedSchool) && (
             <div className="hidden xl:block shrink-0 xl:w-1/3 xl:border-r border-gray-200 overflow-y-auto">
-              <FilterResults
-                filters={filters}
-                onSelectSchool={handleSelectSchool}
-                onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
-                onZoneFallback={handleZoneFallback}
-              />
+              {hasActive ? (
+                <FilterResults
+                  filters={filters}
+                  selectedSchool={selectedSchool}
+                  onSelectSchool={handleSelectSchool}
+                  onClearSelection={clearSelection}
+                  onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
+                  onZoneFallback={handleZoneFallback}
+                />
+              ) : selectedSchool && (
+                // Marker clicked on an unfiltered map: the panel opens purely to carry the
+                // chart. Rendering the results list here would list every school in Nevada.
+                <div className="bg-white px-4 py-3 h-full">
+                  <SchoolComparison school={selectedSchool} onClear={clearSelection} />
+                </div>
+              )}
             </div>
           )}
           <div className="flex-1 min-h-0">
@@ -232,10 +255,12 @@ function HomeContent() {
             <TableView filters={filters} onSelectSchool={handleSelectSchool} />
           </div>
           {/* Mobile: scrollable card list */}
-          <div className="xl:hidden h-full overflow-y-auto">
+          <div ref={mobileListRef} className="xl:hidden h-full overflow-y-auto">
             <FilterResults
               filters={filters}
+              selectedSchool={selectedSchool}
               onSelectSchool={handleSelectSchool}
+              onClearSelection={clearSelection}
               onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
               onZoneFallback={handleZoneFallback}
             />

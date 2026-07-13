@@ -1,4 +1,4 @@
-import type { FilterState, School, SchoolLevel } from '@/types/school'
+import type { School, SchoolLevel } from '@/types/school'
 
 // Official county averages published by NDE (Nevada Report Card), not computed
 // from our own school list -- averaging school-level averages is statistically
@@ -12,29 +12,30 @@ export interface CountyLevelAverages {
   mathProficient: number | null
 }
 
-// Scope used for the statewide figures, which stand in when no county is selected.
+// The key the statewide rows are filed under in the averages data.
 export const STATE_SCOPE = 'State'
 
 export function countyLevelKey(county: string, level: SchoolLevel): string {
   return `${county}:${level}`
 }
 
-// Which average a school's delta is measured against. A proximity search is anchored to
-// a place, not a scope, and its results can straddle a county line -- so each school is
-// compared to its own county. Otherwise the list is exactly the county filter's scope
-// (statewide when there is no filter), and that is what the delta means.
-export function deltaScope(school: School, filters: FilterState): string | null {
-  return filters.proximity ? school.county : filters.county ?? STATE_SCOPE
+// Carson City is an independent city, not a county — "Carson City County" would be wrong.
+export function scopeLabel(scope: string): string {
+  if (scope === STATE_SCOPE) return 'Nevada statewide'
+  return scope === 'Carson City' ? scope : `${scope} County`
 }
 
-export function schoolDeltaAverage(
+// Both scopes a school is charted against. Deliberately independent of the filters: the
+// chart always shows the school's own county and the state, whatever the list is filtered to.
+export function countyAndStateAverages(
   averages: Map<string, CountyLevelAverages> | null,
-  school: School,
-  filters: FilterState
-): CountyLevelAverages | null {
-  const scope = deltaScope(school, filters)
-  if (!averages || scope == null) return null
-  return averages.get(countyLevelKey(scope, school.level)) ?? null
+  school: School
+): { county: CountyLevelAverages | null; state: CountyLevelAverages | null } {
+  if (!averages) return { county: null, state: null }
+  return {
+    county: (school.county && averages.get(countyLevelKey(school.county, school.level))) || null,
+    state: averages.get(countyLevelKey(STATE_SCOPE, school.level)) ?? null,
+  }
 }
 
 export function formatDelta(school: number | null, countyAvg: number | null): string | null {

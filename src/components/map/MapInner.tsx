@@ -137,7 +137,7 @@ export default function MapInner({ filters, selectedSchool, isVisible, onSelectS
         onSelectSchool={onSelectSchool}
         forceIndividual={!!filters.county || !!filters.proximity}
         onCountyFilter={onCountyFilter}
-        filters={filters}
+        isMapVisible={isVisible ?? true}
       />
     </MapContainer>
   )

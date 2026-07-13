@@ -4,44 +4,53 @@ import React, { useEffect, useRef } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import type L from 'leaflet'
 import { createMarkerIcon, getMarkerColor } from '@/utils/markerColors'
-import type { FilterState, SchoolWithDistance } from '@/types/school'
-import { useCountyAverages } from '@/hooks/useCountyAverages'
-import { formatDelta, deltaColor, schoolDeltaAverage } from '@/utils/countyAverages'
+import type { SchoolWithDistance } from '@/types/school'
 
 interface SchoolMarkerProps {
   school: SchoolWithDistance
   isSelected?: boolean
   onSelect?: (school: SchoolWithDistance) => void
-  // Picks the scope the deltas compare against — see schoolDeltaAverage.
-  filters: FilterState
+  isMapVisible?: boolean
 }
 
-export default React.memo(function SchoolMarker({ school, isSelected, onSelect, filters }: SchoolMarkerProps) {
+export default React.memo(function SchoolMarker({ school, isSelected, onSelect, isMapVisible = true }: SchoolMarkerProps) {
   const icon = createMarkerIcon(school.starRating)
   const markerRef = useRef<L.Marker>(null)
-  const countyAvgMap = useCountyAverages()
-  const countyAvg = schoolDeltaAverage(countyAvgMap, school, filters)
-  // NDE only publishes county proficiency, so those are the only deltas we can show.
-  const elaDelta = countyAvg ? formatDelta(typeof school.elaProficient === 'number' ? school.elaProficient : null, countyAvg.elaProficient) : null
-  const mathDelta = countyAvg ? formatDelta(typeof school.mathProficient === 'number' ? school.mathProficient : null, countyAvg.mathProficient) : null
+
+  // The popup is open exactly while its school is selected and the map is the view on screen.
+  // Driving it from both means it closes when the user leaves for the list and comes back on
+  // return — the map is only CSS-hidden, so a popup left open would otherwise still be there.
+  const showPopup = isSelected && isMapVisible
 
   useEffect(() => {
-    if (isSelected && markerRef.current) {
+    if (!markerRef.current) return
+    if (showPopup) {
       markerRef.current.openPopup()
+    } else {
+      markerRef.current.closePopup()
     }
-  }, [isSelected])
+  }, [showPopup])
 
   if (school.lat === null || school.lng === null) return null
 
   return (
     <Marker ref={markerRef} position={[school.lat, school.lng]} icon={icon} eventHandlers={{ click: () => onSelect?.(school) }}>
       <Popup>
-        <div className="min-w-[220px]">
-          <div className="flex items-baseline justify-between gap-2">
+        <div className="min-w-[280px]">
+          <div className="flex items-center gap-2 mb-1">
             <p className="font-semibold text-sm truncate min-w-0">{school.name}</p>
+            <span className="shrink-0 text-xs font-medium" style={{ color: getMarkerColor(school.starRating) }}>
+              {school.starRating !== null ? '★'.repeat(school.starRating) : 'NR'}
+            </span>
             {school.distanceMiles != null && (
               <span className="text-xs font-medium text-gray-500 shrink-0">{school.distanceMiles.toFixed(1)} mi</span>
             )}
+            <span
+              className="ml-auto shrink-0 text-sm font-bold"
+              style={{ color: getMarkerColor(school.starRating) }}
+            >
+              {Math.trunc(school.indexScore)}
+            </span>
           </div>
           <p className="text-xs text-gray-500 mb-1">{school.level} · {school.type}</p>
           {school.address && school.city && (
@@ -55,30 +64,30 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
               <span className="block">{school.city}, NV{school.zip ? ` ${school.zip}` : ''}</span>
             </a>
           )}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mt-0">
-            <div>
-              <div className="text-gray-400">Stars</div>
-              <div className="font-medium" style={{ color: getMarkerColor(school.starRating) }}>{school.starRating !== null ? '★'.repeat(school.starRating) : 'NR'}</div>
-            </div>
-            <div>
-              <div className="text-gray-400">Score</div>
-              <div className="font-medium">{school.indexScore}</div>
-            </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs mt-0">
             <div>
               <div className="text-gray-400">ELA Proficient</div>
-              <div className="font-medium">{school.elaProficient != null ? `${school.elaProficient}%` : '—'}{elaDelta && <span className={`ml-1 font-normal ${deltaColor(elaDelta)}`}>({elaDelta}%)</span>}</div>
+              <div className="font-medium">{school.elaProficient != null ? `${school.elaProficient}%` : '—'}</div>
             </div>
             <div>
               <div className="text-gray-400">Math Proficient</div>
-              <div className="font-medium">{school.mathProficient != null ? `${school.mathProficient}%` : '—'}{mathDelta && <span className={`ml-1 font-normal ${deltaColor(mathDelta)}`}>({mathDelta}%)</span>}</div>
+              <div className="font-medium">{school.mathProficient != null ? `${school.mathProficient}%` : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">ELA Growth</div>
+              <div className="text-gray-400">ELA Growth - AGP</div>
               <div className="font-medium">{school.elaGrowth != null ? `${school.elaGrowth}%` : '—'}</div>
             </div>
             <div>
-              <div className="text-gray-400">Math Growth</div>
+              <div className="text-gray-400">Math Growth - AGP</div>
               <div className="font-medium">{school.mathGrowth != null ? `${school.mathGrowth}%` : '—'}</div>
+            </div>
+            <div>
+              <div className="text-gray-400">ELA Growth - MGP</div>
+              <div className="font-medium">{school.elaMgp != null ? Math.round(school.elaMgp) : '—'}</div>
+            </div>
+            <div>
+              <div className="text-gray-400">Math Growth - MGP</div>
+              <div className="font-medium">{school.mathMgp != null ? Math.round(school.mathMgp) : '—'}</div>
             </div>
           </div>
         </div>
@@ -89,7 +98,5 @@ export default React.memo(function SchoolMarker({ school, isSelected, onSelect, 
   prev.school.id === next.school.id
   && prev.isSelected === next.isSelected
   && prev.onSelect === next.onSelect
-  // Only the two fields the delta scope reads — filters is a fresh object every render.
-  && prev.filters.county === next.filters.county
-  && !!prev.filters.proximity === !!next.filters.proximity
+  && prev.isMapVisible === next.isMapVisible
 )
