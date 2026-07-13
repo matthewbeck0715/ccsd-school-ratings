@@ -8,8 +8,8 @@ import type { School, SchoolLevel } from '@/types/school'
 export interface CountyLevelAverages {
   county: string
   level: SchoolLevel
-  elaProficient: number | null
-  mathProficient: number | null
+  elaProficiency: number | null
+  mathProficiency: number | null
 }
 
 // The key the statewide rows are filed under in the averages data.

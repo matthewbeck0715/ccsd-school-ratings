@@ -5,7 +5,7 @@ import { useSchools } from '@/hooks/useSchools'
 import StarRatingComponent from '@/components/StarRating'
 import type { FilterState, School, SchoolWithDistance } from '@/types/school'
 
-type SortKey = 'name' | 'level' | 'type' | 'starRating' | 'indexScore' | 'elaProficient' | 'mathProficient' | 'elaGrowth' | 'mathGrowth' | 'distanceMiles'
+type SortKey = 'name' | 'level' | 'type' | 'starRating' | 'indexScore' | 'elaProficiency' | 'mathProficiency' | 'elaGrowth' | 'mathGrowth' | 'distanceMiles'
 
 interface TableViewProps {
   filters: FilterState
@@ -119,8 +119,8 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
               <th className={colClass + ' w-0'} onClick={() => handleSort('indexScore')}>
                 Score{indicator('indexScore')}
               </th>
-              <th className={colClass + ' w-0'} onClick={() => handleSort('elaProficient')}>ELA Proficient{indicator('elaProficient')}</th>
-              <th className={colClass + ' w-0'} onClick={() => handleSort('mathProficient')}>Math Proficient{indicator('mathProficient')}</th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('elaProficiency')}>ELA Proficiency{indicator('elaProficiency')}</th>
+              <th className={colClass + ' w-0'} onClick={() => handleSort('mathProficiency')}>Math Proficiency{indicator('mathProficiency')}</th>
               <th className={colClass + ' w-0'} onClick={() => handleSort('elaGrowth')}>ELA Growth{indicator('elaGrowth')}</th>
               <th className={colClass + ' w-0'} onClick={() => handleSort('mathGrowth')}>Math Growth{indicator('mathGrowth')}</th>
             </tr>
@@ -158,8 +158,8 @@ export default function TableView({ filters, onSelectSchool }: TableViewProps) {
                     <StarRatingComponent rating={school.starRating} />
                   </td>
                   <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap"><DecimalValue val={school.indexScore} suffix="" /></td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.elaProficient)}</td>
-                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.mathProficient)}</td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.elaProficiency)}</td>
+                  <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.mathProficiency)}</td>
                   <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.elaGrowth)}</td>
                   <td className="px-4 py-2 w-0 text-gray-700 tabular-nums text-left whitespace-nowrap">{fmtPct(school.mathGrowth)}</td>
                 </tr>

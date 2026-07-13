@@ -85,10 +85,10 @@ for (const [scope, orgId] of Object.entries(SCOPES)) {
   }
 
   for (const [level, fields] of Object.entries(LEVEL_FIELDS)) {
-    const elaProficient = parseValue(row[fields.ela])
-    const mathProficient = parseValue(row[fields.math])
-    if (elaProficient === null && mathProficient === null) continue
-    averages[`${scope}:${level}`] = { county: scope, level, elaProficient, mathProficient }
+    const elaProficiency = parseValue(row[fields.ela])
+    const mathProficiency = parseValue(row[fields.math])
+    if (elaProficiency === null && mathProficiency === null) continue
+    averages[`${scope}:${level}`] = { county: scope, level, elaProficiency, mathProficiency }
   }
 
   console.log(`  ${scope}: ELA ${row.reading_elem}/${row.reading_middle}/${row.reading_high}, Math ${row.math_elem}/${row.math_middle}/${row.math_high} (elem/middle/high)`)

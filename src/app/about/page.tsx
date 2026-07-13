@@ -62,7 +62,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Proficiency Metrics</h3>
           <p className="text-gray-700 leading-relaxed">
-            ELA Proficient and Math Proficient represent the percentage of
+            ELA Proficiency and Math Proficiency represent the percentage of
             students at a school who met grade-level standards on Nevada state assessments. These
             percentages reflect how well students are performing against established academic
             benchmarks in each subject area.

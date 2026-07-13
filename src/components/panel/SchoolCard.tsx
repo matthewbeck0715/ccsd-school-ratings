@@ -2,6 +2,7 @@
 
 import type { School } from '@/types/school'
 import { getMarkerColor } from '@/utils/markerColors'
+import { formatPercentile } from '@/utils/format'
 
 // Fixed width rather than content-sized, so the metric columns line up card to card
 // instead of each grid sizing to its own widest cell. Wide enough for "Math Growth - MGP",
@@ -20,7 +21,7 @@ function pct(val: number | string | null | undefined): string {
 }
 
 function pctile(val: number | null | undefined): string {
-  return val != null ? String(Math.round(val)) : '—'
+  return val != null ? formatPercentile(val) : '—'
 }
 
 function getMapsUrl(query: string): string {
@@ -77,12 +78,12 @@ export default function SchoolCard({ school, distanceMiles, onSelect }: SchoolCa
         </div>
         <div className={METRIC_GRID_CLASS}>
           <div>
-            <div className="text-gray-400">ELA Proficient</div>
-            <div className="font-medium">{pct(school.elaProficient)}</div>
+            <div className="text-gray-400">ELA Proficiency</div>
+            <div className="font-medium">{pct(school.elaProficiency)}</div>
           </div>
           <div>
-            <div className="text-gray-400">Math Proficient</div>
-            <div className="font-medium">{pct(school.mathProficient)}</div>
+            <div className="text-gray-400">Math Proficiency</div>
+            <div className="font-medium">{pct(school.mathProficiency)}</div>
           </div>
           <div>
             <div className="text-gray-400">ELA Growth - AGP</div>

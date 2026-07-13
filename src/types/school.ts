@@ -10,9 +10,9 @@ export interface School {
   county: string | null
   starRating: StarRating | null
   indexScore: number
-  elaProficient: number | string | null
-  mathProficient: number | string | null
-  scienceProficient: number | string | null
+  elaProficiency: number | string | null
+  mathProficiency: number | string | null
+  scienceProficiency: number | string | null
   elaGrowth: number | string | null
   mathGrowth: number | string | null
   // Median growth percentile, from the Nevada Growth Model. Only reported for

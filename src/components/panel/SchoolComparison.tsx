@@ -1,28 +1,19 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import type { School } from '@/types/school'
 import StarRating from '@/components/StarRating'
 import { getMarkerColor } from '@/utils/markerColors'
 import { useCountyAverages } from '@/hooks/useCountyAverages'
 import { countyAndStateAverages, formatDelta, deltaColor, scopeLabel } from '@/utils/countyAverages'
+import { formatPercentile } from '@/utils/format'
 
 // The school is the subject: it gets the bar. The county and state are context, drawn as
 // reference marks on the same 0–100% scale. They use different shapes rather than just
 // different colors because Clark's averages sit within a point of the state's — two marks
 // in the same plane would land on top of each other and become one smudge.
 const CAP = 100
-
-// A growth percentile of 50 is the typical Nevada student by construction — the state median is
-// the definition of the scale, not a figure we look up. It is the one reference the growth
-// section can honestly draw, so MGP gets the state caret while the growth percentages get none.
-const MEDIAN_PERCENTILE = 50
-
-function mgpEmptyLabel(school: School): string {
-  return school.level === 'High'
-    ? 'Not reported for high schools'
-    : 'Not reported'
-}
 
 function toNum(val: number | string | null | undefined): number | null {
   if (val == null || val === '') return null
@@ -34,12 +25,63 @@ function pos(val: number): string {
   return `${Math.max(0, Math.min(CAP, val))}%`
 }
 
-// Proficiency and growth are percentages; MGP is a percentile, which takes no % sign and is
-// published as a whole number.
+// Proficiency and growth are percentages; MGP is a percentile, formatted via formatPercentile.
 type Unit = 'percent' | 'percentile'
 
 function fmt(val: number, unit: Unit = 'percent'): string {
-  return unit === 'percentile' ? String(Math.round(val)) : `${val.toFixed(1)}%`
+  return unit === 'percentile' ? formatPercentile(val) : `${val.toFixed(1)}%`
+}
+
+interface TooltipInfo {
+  name: string
+  description: string
+}
+
+// title gives desktop hover a native tooltip; the click-toggle popover is what makes this
+// reachable on mobile, where there's no hover state to trigger title on. Every tooltip leads
+// with the metric's name so the format reads the same regardless of which metric it's on.
+function InfoTooltip({ name, description }: TooltipInfo) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('click', handleOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('click', handleOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [open])
+
+  return (
+    <span ref={ref} className="relative inline-flex">
+      <button
+        type="button"
+        title={`${name}: ${description}`}
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border border-gray-300 text-[9px] font-semibold leading-none text-gray-400 cursor-help"
+      >
+        ?
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute left-0 top-full z-20 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-white p-2 text-[11px] leading-snug shadow-lg"
+        >
+          <span className="block font-semibold text-gray-900">{name}</span>
+          <span className="mt-0.5 block font-normal text-gray-600">{description}</span>
+        </span>
+      )}
+    </span>
+  )
 }
 
 function StateCaret({ className = '', style, title }: {
@@ -59,20 +101,23 @@ function StateCaret({ className = '', style, title }: {
 // county/state are null for the growth-percentage metrics — NDE publishes no averages for them,
 // so those bars carry the school's value alone. The bar still earns its place: it puts growth on
 // the same 0–100 scale as proficiency, so the metrics read against each other at a glance.
-function MetricBar({ label, value, county = null, state = null, countyName = null, unit = 'percent', sampleSize = null, emptyLabel = 'Not reported' }: {
+function MetricBar({ label, value, county = null, state = null, countyName = null, unit = 'percent', emptyLabel = 'Not reported', tooltip }: {
   label: string
   value: number | null
   county?: number | null
   state?: number | null
   countyName?: string | null
   unit?: Unit
-  sampleSize?: number | null
   emptyLabel?: string
+  tooltip?: TooltipInfo
 }) {
   if (value === null) {
     return (
       <div>
-        <div className="text-xs font-semibold text-gray-700">{label}</div>
+        <div className="flex min-w-0 items-center gap-1 text-xs font-semibold text-gray-700">
+          {label}
+          {tooltip && <InfoTooltip {...tooltip} />}
+        </div>
         <div className="mt-1 text-xs text-gray-400">{emptyLabel}</div>
       </div>
     )
@@ -85,8 +130,11 @@ function MetricBar({ label, value, county = null, state = null, countyName = nul
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs font-semibold text-gray-700">{label}</span>
-        <span className="text-sm font-semibold text-gray-900">{fmt(value, unit)}</span>
+        <span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-gray-700">
+          {label}
+          {tooltip && <InfoTooltip {...tooltip} />}
+        </span>
+        <span className="shrink-0 text-sm font-semibold text-gray-900">{fmt(value, unit)}</span>
       </div>
 
       {/* pt-2 reserves the plane above the track for the state caret */}
@@ -142,17 +190,13 @@ function MetricBar({ label, value, county = null, state = null, countyName = nul
         </div>
       )}
 
-      {(countyDelta || stateDelta || sampleSize != null) && (
+      {(countyDelta || stateDelta) && (
         <div className="mt-1 text-[11px]">
           {countyDelta && (
             <span className={deltaColor(countyDelta)}>{countyDelta} vs {countyName}</span>
           )}
           {countyDelta && stateDelta && <span className="mx-1.5 text-gray-300">·</span>}
           {stateDelta && <span className={deltaColor(stateDelta)}>{stateDelta} vs Nevada</span>}
-          {(countyDelta || stateDelta) && sampleSize != null && <span className="mx-1.5 text-gray-300">·</span>}
-          {sampleSize != null && (
-            <span className="text-gray-400">{sampleSize.toLocaleString()} students</span>
-          )}
         </div>
       )}
     </div>
@@ -210,41 +254,69 @@ export default function SchoolComparison({ school, onClear }: {
 
       <Section title="Proficiency">
         <MetricBar
-          label="ELA Proficient"
-          value={toNum(school.elaProficient)}
-          county={county?.elaProficient ?? null}
-          state={state?.elaProficient ?? null}
+          label="ELA Proficiency"
+          value={toNum(school.elaProficiency)}
+          county={county?.elaProficiency ?? null}
+          state={state?.elaProficiency ?? null}
           countyName={countyName}
+          tooltip={{
+            name: 'Proficiency',
+            description: 'Percentage of students who met grade-level standards on Nevada state assessments.',
+          }}
         />
         <MetricBar
-          label="Math Proficient"
-          value={toNum(school.mathProficient)}
-          county={county?.mathProficient ?? null}
-          state={state?.mathProficient ?? null}
+          label="Math Proficiency"
+          value={toNum(school.mathProficiency)}
+          county={county?.mathProficiency ?? null}
+          state={state?.mathProficiency ?? null}
           countyName={countyName}
+          tooltip={{
+            name: 'Proficiency',
+            description: 'Percentage of students who met grade-level standards on Nevada state assessments.',
+          }}
         />
       </Section>
 
-      <Section title="Growth">
-        <MetricBar label="ELA Growth - AGP" value={toNum(school.elaGrowth)} />
-        <MetricBar
-          label="ELA Growth - MGP"
-          value={school.elaMgp}
-          unit="percentile"
-          state={MEDIAN_PERCENTILE}
-          sampleSize={school.elaMgpN}
-          emptyLabel={mgpEmptyLabel(school)}
-        />
-        <MetricBar label="Math Growth - AGP" value={toNum(school.mathGrowth)} />
-        <MetricBar
-          label="Math Growth - MGP"
-          value={school.mathMgp}
-          unit="percentile"
-          state={MEDIAN_PERCENTILE}
-          sampleSize={school.mathMgpN}
-          emptyLabel={mgpEmptyLabel(school)}
-        />
-      </Section>
+      {/* MGP isn't reported for high schools, and AGP alone doesn't earn the section — so
+          high schools skip Growth entirely rather than show a half-empty chart. */}
+      {school.level !== 'High' && (
+        <Section title="Growth">
+          <MetricBar
+            label="ELA Growth - % Met AGP"
+            value={toNum(school.elaGrowth)}
+            tooltip={{
+              name: 'Adequate Growth Percentile',
+              description: "Each student has their own AGP, a growth target based on reaching or staying proficient. This metric is the percentage of students who met their individual AGP.",
+            }}
+          />
+          <MetricBar
+            label="ELA Growth - MGP"
+            value={school.elaMgp}
+            unit="percentile"
+            tooltip={{
+              name: 'Median Growth Percentile',
+              description: "Each student gets a growth percentile from the Nevada Growth Model, based on their year-over-year progress compared to academic peers statewide with similar prior test scores. This metric is the median of those individual percentiles across the school; 50 is typical growth.",
+            }}
+          />
+          <MetricBar
+            label="Math Growth - % Met AGP"
+            value={toNum(school.mathGrowth)}
+            tooltip={{
+              name: 'Adequate Growth Percentile',
+              description: "Each student has their own AGP, a growth target based on reaching or staying proficient. This metric is the percentage of students who met their individual AGP.",
+            }}
+          />
+          <MetricBar
+            label="Math Growth - MGP"
+            value={school.mathMgp}
+            unit="percentile"
+            tooltip={{
+              name: 'Median Growth Percentile',
+              description: "Each student gets a growth percentile from the Nevada Growth Model, based on their year-over-year progress compared to academic peers statewide with similar prior test scores. This metric is the median of those individual percentiles across the school; 50 is typical growth.",
+            }}
+          />
+        </Section>
+      )}
     </div>
   )
 }
