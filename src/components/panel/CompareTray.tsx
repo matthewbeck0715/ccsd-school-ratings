@@ -2,8 +2,8 @@
 
 import type { School } from '@/types/school'
 
-// Sits under the filter bar, in both map and table views, so a school checked for
-// comparison while browsing the map is still there when the user switches to the table.
+// Sits under the filter bar, in both map and list views, so a school checked for
+// comparison while browsing the map is still there when the user switches to the list tab.
 export default function CompareTray({
   schools,
   onRemove,
@@ -18,13 +18,36 @@ export default function CompareTray({
   const canView = schools.length >= 2
 
   return (
-    // Below xl the label, chips, and view/clear buttons are each their own row instead of
-    // fighting for the same line; at xl they rejoin into the original single wrapping row.
+    // Below xl, row 1 pairs the label with the view/clear buttons (pinned top-right) and row 2
+    // holds the wrapping chips; at xl everything rejoins into the original single wrapping row
+    // (the label-and-buttons div goes `contents` so its children re-flatten into that row, with
+    // xl:order used to put the chips back between the label and the buttons).
     <div className="flex flex-col gap-2 border-b border-gray-200 bg-blue-50 px-4 py-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-0">
-      <span className="shrink-0 text-xs font-semibold text-gray-600 xl:w-36">
-        Comparing {schools.length} {schools.length === 1 ? 'school' : 'schools'}
-      </span>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex items-center justify-between gap-3 xl:contents">
+        <span className="shrink-0 text-xs font-semibold text-gray-600 xl:w-36">
+          Comparing {schools.length} {schools.length === 1 ? 'school' : 'schools'}
+        </span>
+        <div className="flex shrink-0 items-center gap-3 xl:order-3 xl:ml-auto">
+          {!canView && (
+            <span className="text-xs text-gray-400">Pick at least 1 more to compare</span>
+          )}
+          {canView && (
+            <button
+              onClick={onView}
+              className="rounded border border-blue-600 bg-blue-600 px-2.5 py-0.5 text-xs font-bold text-white transition-colors hover:border-blue-700 hover:bg-blue-700"
+            >
+              View Comparison
+            </button>
+          )}
+          <button
+            onClick={onClear}
+            className="rounded border border-gray-300 bg-white px-2.5 py-0.5 text-xs font-bold text-gray-600 transition-colors hover:border-gray-400"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 xl:order-2">
         {schools.map((school) => (
           <span
             key={school.id}
@@ -40,25 +63,6 @@ export default function CompareTray({
             </button>
           </span>
         ))}
-      </div>
-      <div className="flex shrink-0 items-center gap-3 xl:ml-auto">
-        {!canView && (
-          <span className="text-xs text-gray-400">Pick at least 1 more to compare</span>
-        )}
-        {canView && (
-          <button
-            onClick={onView}
-            className="rounded border border-blue-600 bg-blue-600 px-2.5 py-0.5 text-xs font-bold text-white transition-colors hover:border-blue-700 hover:bg-blue-700"
-          >
-            View Comparison
-          </button>
-        )}
-        <button
-          onClick={onClear}
-          className="rounded border border-gray-300 bg-white px-2.5 py-0.5 text-xs font-bold text-gray-600 transition-colors hover:border-gray-400"
-        >
-          Clear
-        </button>
       </div>
     </div>
   )

@@ -15,9 +15,7 @@ import ProximityStatus from '@/components/filters/ProximityStatus'
 import FilterDrawer from '@/components/filters/FilterDrawer'
 import { useSchools } from '@/hooks/useSchools'
 import MapView from '@/components/map/MapView'
-import TableView from '@/components/table/TableView'
 import FilterResults from '@/components/panel/FilterResults'
-import SchoolComparison from '@/components/panel/SchoolComparison'
 import CompareColumns from '@/components/panel/CompareColumns'
 import CompareTray from '@/components/panel/CompareTray'
 import { hasActiveFilters, parseFilters, parseSchoolIds, serializeFilters, serializeSchoolIds } from '@/utils/filterParams'
@@ -25,7 +23,7 @@ import { haversineDistanceMiles } from '@/utils/haversine'
 
 // Tailwind's xl breakpoint — the width at which the results panel appears beside the map.
 const DESKTOP_QUERY = '(min-width: 1280px)'
-// "2-3 schools" per the comparison feature spec — enough to compare without the table
+// "2-3 schools" per the comparison feature spec — enough to compare without the columns
 // getting unreadable on mobile.
 const MAX_COMPARE = 3
 
@@ -33,7 +31,7 @@ function HomeContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [view, setView] = useState<'map' | 'table'>('map')
+  const [view, setView] = useState<'map' | 'list'>('map')
   const [filters, setFilters] = useState<FilterState>(() => parseFilters(searchParams))
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null)
   const [addressError, setAddressError] = useState<string | null>(null)
@@ -60,14 +58,14 @@ function HomeContent() {
     if (!match) return
     setSelectedSchool(match)
     // Mobile's map view has no side panel — only a marker popup — so the comparison panel needs
-    // the list/table view to be visible there. Desktop keeps the map, where the panel already
+    // the list tab to be visible there. Desktop keeps the map, where the panel already
     // renders alongside it.
-    setView(window.matchMedia(DESKTOP_QUERY).matches ? 'map' : 'table')
+    setView(window.matchMedia(DESKTOP_QUERY).matches ? 'map' : 'list')
   }, [pendingSchoolId, allSchools])
 
   // Same deep-link pattern as pendingSchoolId above, but for a shared comparison link
   // (?compare=id1,id2) — resolves once, then opens straight into the compare view (which
-  // covers the whole main area regardless of the map/table toggle) so "look at these two
+  // covers the whole main area regardless of the map/list toggle) so "look at these two
   // options" links work without extra clicks.
   const resolvedPendingCompare = useRef(false)
   useEffect(() => {
@@ -137,6 +135,7 @@ function HomeContent() {
   }, [])
 
   const hasActive = hasActiveFilters(filters)
+  const showPanel = view === 'list' || hasActive || selectedSchool !== null
 
   const clearSelection = useCallback(() => setSelectedSchool(null), [])
 
@@ -239,18 +238,17 @@ function HomeContent() {
           <div className="flex rounded border border-gray-300 overflow-hidden shrink-0 ml-auto">
             <button
               onClick={() => setView('map')}
-              className={`px-2.5 py-0.5 text-xs font-bold transition-colors ${view === 'map' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:border-gray-400'}`}
+              className={`w-14 py-0.5 text-xs font-bold text-center transition-colors ${view === 'map' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:border-gray-400'}`}
             >
               Map
             </button>
             {/* The selection survives the trip, so coming back to the map lands on the same
                 school with its popup open. */}
             <button
-              onClick={() => setView('table')}
-              className={`px-2.5 py-0.5 text-xs font-bold border-l border-gray-300 transition-colors ${view === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:border-gray-400'}`}
+              onClick={() => setView('list')}
+              className={`w-14 py-0.5 text-xs font-bold text-center border-l border-gray-300 transition-colors ${view === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:border-gray-400'}`}
             >
-              <span className="xl:hidden">List</span>
-              <span className="hidden xl:inline">Table</span>
+              List
             </button>
           </div>
         </div>
@@ -316,12 +314,12 @@ function HomeContent() {
         filters={filters}
         onChange={setFilters}
         onClear={clearFilters}
-        onViewSchools={() => { setView('table'); clearSelection(); handleBackFromCompare() }}
+        onViewSchools={() => { setView('list'); clearSelection(); handleBackFromCompare() }}
         filterCount={filterCount}
         schoolCount={filteredSchools.length}
       />
 
-      {/* Comparison tray — sits under the filter bar so it's visible from both map and table
+      {/* Comparison tray — sits under the filter bar so it's visible from both map and list
           views. Hidden once the compare view itself is open, since "Back to results" on any
           column already provides a way out. */}
       {pinnedForCompare.length > 0 && !compareMode && (
@@ -335,70 +333,43 @@ function HomeContent() {
 
       {/* Main content */}
       <main className="flex-1 overflow-hidden">
-        {/* Compare view covers the whole main area — the same space the map or table would
-            otherwise fill — rather than being squeezed into the 1/3 side panel. Kept as a
+        {/* Compare view covers the whole main area — the same space the map or list tab
+            would otherwise fill — rather than being squeezed into the 1/3 side panel. Kept as a
             CSS-hidden sibling (not conditionally unmounted) so the map underneath keeps its
-            zoom/pan state across compare toggles, matching the existing map/table pattern. */}
+            zoom/pan state across compare toggles, matching the existing map/list pattern. */}
         <div className={showCompareView ? 'h-full' : 'hidden'}>
           <CompareColumns schools={pinnedForCompare} onExit={handleBackFromCompare} getDistanceMiles={getCompareDistanceMiles} />
         </div>
-        <div className={!showCompareView && view === 'map' ? 'flex xl:flex-row h-full' : 'hidden'}>
-          {(hasActive || selectedSchool) && (
-            <div className="hidden xl:block shrink-0 xl:w-1/3 xl:border-r border-gray-200 overflow-y-auto">
-              {hasActive ? (
-                <FilterResults
-                  filters={filters}
-                  selectedSchool={selectedSchool}
-                  onSelectSchool={handleSelectSchool}
-                  onClearSelection={clearSelection}
-                  onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
-                  onZoneFallback={handleZoneFallback}
-                  compareIds={compareIds}
-                  onToggleCompare={handleToggleCompare}
-                  canAddCompare={canAddCompare}
-                />
-              ) : selectedSchool && (
-                // Marker clicked on an unfiltered map: the panel opens purely to carry the
-                // chart. Rendering the results list here would list every school in Nevada.
-                <div className="bg-white px-4 py-3 h-full">
-                  <SchoolComparison school={selectedSchool} onClear={clearSelection} />
-                </div>
-              )}
+        <div className={showCompareView ? 'hidden' : 'flex xl:flex-row h-full'}>
+          {showPanel && (
+            <div
+              ref={mobileListRef}
+              className={
+                view === 'list'
+                  ? 'w-full h-full overflow-y-auto'
+                  : 'hidden xl:block shrink-0 xl:w-1/3 overflow-y-auto'
+              }
+            >
+              <FilterResults
+                filters={filters}
+                selectedSchool={selectedSchool}
+                onSelectSchool={handleSelectSchool}
+                onClearSelection={clearSelection}
+                onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
+                onZoneFallback={handleZoneFallback}
+                compareIds={compareIds}
+                onToggleCompare={handleToggleCompare}
+                canAddCompare={canAddCompare}
+              />
             </div>
           )}
-          <div className="flex-1 min-h-0">
+          <div className={view === 'map' ? 'flex-1 min-h-0' : 'hidden'}>
             <MapView
               filters={filters}
               selectedSchool={selectedSchool}
               isVisible={view === 'map' && !showCompareView}
               onSelectSchool={handleSelectSchool}
               onCountyFilter={(county) => setFilters((f) => ({ ...f, county }))}
-              compareIds={compareIds}
-              onToggleCompare={handleToggleCompare}
-              canAddCompare={canAddCompare}
-            />
-          </div>
-        </div>
-        <div className={!showCompareView && view === 'table' ? 'h-full' : 'hidden'}>
-          {/* Desktop: full table */}
-          <div className="hidden xl:block h-full">
-            <TableView
-              filters={filters}
-              onSelectSchool={handleSelectSchool}
-              compareIds={compareIds}
-              onToggleCompare={handleToggleCompare}
-              canAddCompare={canAddCompare}
-            />
-          </div>
-          {/* Mobile: scrollable card list */}
-          <div ref={mobileListRef} className="xl:hidden h-full overflow-y-auto">
-            <FilterResults
-              filters={filters}
-              selectedSchool={selectedSchool}
-              onSelectSchool={handleSelectSchool}
-              onClearSelection={clearSelection}
-              onZoneResult={(ids) => setFilters((f) => ({ ...f, zonedSchoolIds: ids }))}
-              onZoneFallback={handleZoneFallback}
               compareIds={compareIds}
               onToggleCompare={handleToggleCompare}
               canAddCompare={canAddCompare}
