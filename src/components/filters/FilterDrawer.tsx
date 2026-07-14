@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { FilterState } from '@/types/school'
 import SchoolSearch from './SchoolSearch'
 import ProximitySearch from './ProximitySearch'
@@ -22,11 +22,72 @@ interface FilterDrawerProps {
 export default function FilterDrawer({ filters, onChange, onClear, onViewSchools, filterCount, schoolCount }: FilterDrawerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [addressError, setAddressError] = useState<string | null>(null)
+  const [dragOffset, setDragOffset] = useState<number | null>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  const dragState = useRef<{
+    startY: number
+    startOffset: number
+    collapsedOffset: number
+    moved: boolean
+    lastY: number
+    lastT: number
+    velocity: number
+  } | null>(null)
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drawerRef.current) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const collapsedOffset = drawerRef.current.getBoundingClientRect().height - 72
+    const now = performance.now()
+    dragState.current = {
+      startY: e.clientY,
+      startOffset: isOpen ? 0 : collapsedOffset,
+      collapsedOffset,
+      moved: false,
+      lastY: e.clientY,
+      lastT: now,
+      velocity: 0,
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragState.current
+    if (!drag) return
+    const delta = e.clientY - drag.startY
+    if (Math.abs(delta) > 5) drag.moved = true
+    const next = Math.min(Math.max(drag.startOffset + delta, 0), drag.collapsedOffset)
+    setDragOffset(next)
+
+    const now = performance.now()
+    const dt = now - drag.lastT
+    if (dt > 0) drag.velocity = (e.clientY - drag.lastY) / dt
+    drag.lastY = e.clientY
+    drag.lastT = now
+  }
+
+  const handlePointerUp = () => {
+    const drag = dragState.current
+    dragState.current = null
+    setDragOffset(null)
+    if (!drag || !drag.moved) return
+
+    const finalOffset = Math.min(Math.max(drag.startOffset + (drag.lastY - drag.startY), 0), drag.collapsedOffset)
+    const FLICK_VELOCITY = 0.5
+    let shouldOpen: boolean
+    if (drag.velocity < -FLICK_VELOCITY) {
+      shouldOpen = true
+    } else if (drag.velocity > FLICK_VELOCITY) {
+      shouldOpen = false
+    } else {
+      shouldOpen = finalOffset < drag.collapsedOffset * 0.6
+    }
+    setIsOpen(shouldOpen)
+  }
 
   return (
     <>
@@ -38,13 +99,24 @@ export default function FilterDrawer({ filters, onChange, onClear, onViewSchools
       )}
 
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl xl:hidden flex flex-col overflow-hidden max-h-[85vh] transition-transform duration-300 ease-out"
-        style={{ transform: isOpen ? 'translateY(0)' : 'translateY(calc(100% - 4.5rem))', boxShadow: '0 -3px 10px rgba(0, 0, 0, 0.1)' }}
+        ref={drawerRef}
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl xl:hidden flex flex-col overflow-hidden max-h-[85vh]"
+        style={{
+          transform: dragOffset !== null
+            ? `translateY(${dragOffset}px)`
+            : isOpen ? 'translateY(0)' : 'translateY(calc(100% - 4.5rem))',
+          transition: dragOffset !== null ? 'none' : 'transform 300ms ease-out',
+          boxShadow: '0 -3px 10px rgba(0, 0, 0, 0.1)',
+        }}
       >
         {/* Drag handle + header row */}
         <div
-          className="w-full shrink-0 h-18 cursor-pointer"
+          className="w-full shrink-0 h-18 cursor-pointer touch-none"
           onClick={() => setIsOpen((o) => !o)}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
           <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2.5 mb-1.5" />
           <div className="flex items-center justify-between px-4 py-2">
