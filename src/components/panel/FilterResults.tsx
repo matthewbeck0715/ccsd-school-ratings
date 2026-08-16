@@ -75,14 +75,18 @@ interface FilterResultsProps {
   canAddCompare: boolean
 }
 
-// Cards go up to 3 columns once the panel itself (not the viewport) is wide enough — a
-// container query rather than a media query, since the same component renders both in the
-// map's narrow 1/3-width side panel and in the list tab's full-width picker. The column gap
-// (gap-x-8) is set to exactly 2x the wrapper's side padding (px-4) so a 3-column card in the
+// Cards jump straight from 1 to 3 columns once the panel itself (not the viewport) is wide
+// enough — a container query rather than a media query, since the same component renders both
+// in the map's narrow 1/3-width side panel and in the list tab's full-width picker. The column
+// gap (gap-x-8) is set to exactly 2x the wrapper's side padding (px-4) so a 3-column card in the
 // list tab lands at the same width as a 1-column card in the map's side panel — with N=3
 // columns, the padding shared across all cards plus the 2 internal gaps works out to the same
-// per-card width as the single column's full padding being spent on just one card.
-const CARD_GRID_CLASS = 'grid grid-cols-1 @xl:grid-cols-2 @6xl:grid-cols-3 gap-x-8 gap-y-3'
+// per-card width as the single column's full padding being spent on just one card. There's no
+// intermediate 2-column stage: that math only holds for the 1-to-3 jump, and on wide monitors
+// (e.g. 1920px) the side panel (viewport / 3) is wide enough to cross a 2-column breakpoint
+// while still needing to render as one column, so an @xl:grid-cols-2 step would shrink its
+// cards instead of keeping them full width.
+const CARD_GRID_CLASS = 'grid grid-cols-1 @6xl:grid-cols-3 gap-x-8 gap-y-3'
 
 function ProximityPanel({
   filters,
