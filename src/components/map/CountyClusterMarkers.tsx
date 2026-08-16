@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import { useMapEvents } from 'react-leaflet'
 import SchoolMarker from './SchoolMarker'
 import CountyPolygons from './CountyPolygons'
@@ -32,12 +32,40 @@ export default function CountyClusterMarkers({
   onToggleCompare,
   canAddCompare = true,
 }: CountyClusterMarkersProps) {
+  const scheduledFrame = useRef<number | null>(null)
+
   const map = useMapEvents({
     zoomend: () => setZoom(map.getZoom()),
+    move: () => {
+      if (scheduledFrame.current != null) return
+      scheduledFrame.current = requestAnimationFrame(() => {
+        scheduledFrame.current = null
+        setBounds(map.getBounds().pad(1))
+      })
+    },
+    moveend: () => {
+      if (scheduledFrame.current != null) {
+        cancelAnimationFrame(scheduledFrame.current)
+        scheduledFrame.current = null
+      }
+      setBounds(map.getBounds().pad(1))
+    },
   })
   const [zoom, setZoom] = useState(map.getZoom())
+  const [bounds, setBounds] = useState(() => map.getBounds().pad(1))
+
+  useEffect(() => {
+    return () => {
+      if (scheduledFrame.current != null) cancelAnimationFrame(scheduledFrame.current)
+    }
+  }, [])
 
   const showIndividual = forceIndividual || zoom >= CLUSTER_ZOOM_THRESHOLD
+
+  const visibleSchools = useMemo(
+    () => schools.filter((school) => school.lat != null && school.lng != null && bounds.contains([school.lat, school.lng])),
+    [schools, bounds]
+  )
 
   const countyGroups = useMemo(() => {
     const groups = new Map<string, SchoolWithDistance[]>()
@@ -63,7 +91,7 @@ export default function CountyClusterMarkers({
   if (showIndividual) {
     return (
       <>
-        {schools.map((school) => (
+        {visibleSchools.map((school) => (
           <SchoolMarker
             key={school.id}
             school={school}

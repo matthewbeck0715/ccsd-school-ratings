@@ -24,12 +24,12 @@ export default function CompareTray({
     // with the chips row (xl:order-2) between the label (xl:order-1) and the view button (xl:order-3).
     <div className="flex flex-col gap-2 border-b border-gray-200 bg-blue-50 px-4 py-2 xl:flex-row xl:flex-wrap xl:items-center xl:gap-0">
       <div className="flex items-center justify-between gap-3 xl:contents">
-        <span className={`shrink-0 text-xs font-semibold text-gray-600 ${hasSchools ? 'xl:w-36' : ''}`}>
+        <span className={`xl:shrink-0 text-xs font-semibold text-gray-600 ${hasSchools ? 'xl:w-36' : ''}`}>
           {hasSchools ? (
             `Comparing ${schools.length} ${schools.length === 1 ? 'school' : 'schools'}`
           ) : (
             <>
-              Tap <span className="text-blue-600">Compare</span> on 2 or more schools to see them side by side
+              Tap <span className="text-blue-600">Compare</span> on 2 or more schools
             </>
           )}
         </span>
